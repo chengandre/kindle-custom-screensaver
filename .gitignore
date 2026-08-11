@@ -1,0 +1,21 @@
+# Runtime
+*.log
+*.pid
+
+# Local prototype binaries
+prototype/**/bin/*
+!prototype/**/bin/.gitkeep
+
+# User screensavers
+prototype/**/screensavers/*
+!prototype/**/screensavers/.gitkeep
+
+# Build output
+build/
+dist/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
