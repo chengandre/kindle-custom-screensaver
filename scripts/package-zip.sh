@@ -3,7 +3,7 @@ set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
-VERSION="0.1.0"
+VERSION="${VERSION:-0.1.0}"
 PACKAGE_NAME="custom-screensaver-${VERSION}-kindlehf.zip"
 
 DIST="$ROOT/dist"
