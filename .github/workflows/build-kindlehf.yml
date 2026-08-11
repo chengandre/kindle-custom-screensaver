@@ -3,17 +3,8 @@ name: Build KindleHF binaries
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - "v*"
-    paths:
-      - "src/shield/**"
-      - "src/scripts/**"
-      - "packaging/zip/**"
-      - "scripts/package-zip.sh"
-      - "meson.build"
-      - ".github/workflows/build-kindlehf.yml"
 
 permissions:
   contents: read
@@ -253,3 +244,5 @@ jobs:
             --title "Kindle Custom Screensaver ${GITHUB_REF_NAME}" \
             --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
             --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
