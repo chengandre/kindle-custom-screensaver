@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - "src/shield/**"
+      - "src/scripts/**"
+      - "packaging/zip/**"
+      - "scripts/package-zip.sh"
       - "meson.build"
       - ".github/workflows/build-kindlehf.yml"
 
@@ -187,6 +190,9 @@ jobs:
             echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
 
+      - name: Package ZIP
+        run: ./scripts/package-zip.sh
+
       - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -195,3 +201,4 @@ jobs:
             dist/screensaver_shield
             dist/fbink_hf
             dist/build-metadata.txt
+            release/custom-screensaver-kindlehf.zip
