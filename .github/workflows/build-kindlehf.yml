@@ -220,6 +220,9 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -247,8 +250,6 @@ jobs:
             "$GITHUB_REF_NAME" \
             "$RELEASE_ZIP" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes \
+            --title "Kindle Custom Screensaver ${GITHUB_REF_NAME}" \
+            --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
             --verify-tag
-        env:
-          GH_TOKEN: ${{ github.token }}
