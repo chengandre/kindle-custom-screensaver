@@ -1,4 +1,4 @@
-name: Build KindleHF shield
+name: Build KindleHF binaries
 
 on:
   workflow_dispatch:
@@ -8,14 +8,14 @@ on:
     paths:
       - "src/shield/**"
       - "meson.build"
-      - ".github/workflows/build-shield.yml"
+      - ".github/workflows/build-kindlehf.yml"
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build screensaver_shield for kindlehf
+    name: Build native binaries for kindlehf
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -51,18 +51,21 @@ jobs:
             meson \
             ninja-build \
             pkg-config
+
       - name: Install KindleHF toolchain
         run: |
           wget \
             -O "$RUNNER_TEMP/kindlehf.tar.gz" \
-            "https://github.com/KindleModding/koxtoolchain/releases/latest/download/kindlehf.tar.gz"
+            "https://github.com/KindleModding/koxtoolchain/releases/download/2026.04/kindlehf.tar.gz"
+
+          echo \
+            "d08d3a5cbbaa184cc0cc2279df1d64a71656ab2c1e0223cae324b8d30c8d73e0  $RUNNER_TEMP/kindlehf.tar.gz" \
+            | sha256sum -c -
 
           tar -xzf "$RUNNER_TEMP/kindlehf.tar.gz" \
             -C "$HOME"
 
           test -d "$HOME/x-tools/arm-kindlehf-linux-gnueabihf"
-
-          echo "KindleHF toolchain installed"
 
       - name: Clone Kindle SDK
         run: |
@@ -77,16 +80,6 @@ jobs:
         run: |
           chmod +x ./gen-sdk.sh
           ./gen-sdk.sh kindlehf
-
-      - name: Record dependency revisions
-        run: |
-          mkdir -p dist
-
-          {
-            echo "project_commit=${GITHUB_SHA}"
-            echo "toolchain=KindleModding/koxtoolchain prebuilt kindlehf"
-            echo "kindle_sdk_commit=$(git -C "$RUNNER_TEMP/kindle-sdk" rev-parse HEAD)"
-          } | tee dist/build-metadata.txt
 
       - name: Configure Meson for kindlehf
         run: |
@@ -135,10 +128,67 @@ jobs:
           echo "=== dynamic dependencies ==="
           readelf -d dist/screensaver_shield | grep NEEDED || true
 
-      - name: Upload KindleHF artifact
+      - name: Checkout FBInk
+        run: |
+          git clone \
+            https://github.com/NiLuJe/FBInk.git \
+            "$RUNNER_TEMP/FBInk"
+
+          git -C "$RUNNER_TEMP/FBInk" \
+            checkout ede0a8d0a107768609fde9a68aab5f5c583be398
+
+          git -C "$RUNNER_TEMP/FBInk" \
+            submodule update --init --recursive
+
+      - name: Build FBInk for KindleHF
+        run: |
+          TOOLCHAIN="$HOME/x-tools/arm-kindlehf-linux-gnueabihf/bin/arm-kindlehf-linux-gnueabihf"
+
+          make -C "$RUNNER_TEMP/FBInk" distclean
+
+          make -C "$RUNNER_TEMP/FBInk" \
+            strip \
+            KINDLE=1 \
+            CROSS_TC="$TOOLCHAIN" \
+            -j"$(nproc)"
+
+          cp \
+            "$RUNNER_TEMP/FBInk/Release/fbink" \
+            dist/fbink_hf
+
+      - name: Inspect FBInk binary
+        run: |
+          echo "=== file ==="
+          file dist/fbink_hf
+
+          echo
+          echo "=== ELF header ==="
+          readelf -h dist/fbink_hf
+
+          echo
+          echo "=== interpreter ==="
+          readelf -l dist/fbink_hf | grep interpreter || true
+
+          echo
+          echo "=== dynamic dependencies ==="
+          readelf -d dist/fbink_hf | grep NEEDED || true
+
+      - name: Record dependency revisions
+        run: |
+          {
+            echo "project_commit=${GITHUB_SHA}"
+            echo "toolchain_repo=KindleModding/koxtoolchain"
+            echo "toolchain_release=2026.04"
+            echo "toolchain_sha256=d08d3a5cbbaa184cc0cc2279df1d64a71656ab2c1e0223cae324b8d30c8d73e0"
+            echo "kindle_sdk_commit=$(git -C "$RUNNER_TEMP/kindle-sdk" rev-parse HEAD)"
+            echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
+          } | tee dist/build-metadata.txt
+
+      - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: screensaver-shield-kindlehf
+          name: custom-screensaver-kindlehf
           path: |
             dist/screensaver_shield
+            dist/fbink_hf
             dist/build-metadata.txt
