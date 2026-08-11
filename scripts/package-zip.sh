@@ -12,7 +12,8 @@ APP="$STAGING/extensions/custom-screensaver"
 for file in \
     "$DIST/screensaver_shield" \
     "$DIST/fbink_hf" \
-    "$DIST/build-metadata.txt"
+    "$DIST/build-metadata.txt" \
+    "$ROOT/LICENSE"
 do
     if [ ! -f "$file" ]; then
         echo "Missing required file: $file" >&2
@@ -68,6 +69,10 @@ cp \
 cp \
     "$DIST/build-metadata.txt" \
     "$APP/build-metadata.txt"
+
+cp \
+    "$ROOT/LICENSE" \
+    "$APP/LICENSE"
 
 chmod +x \
     "$STAGING/documents/Custom Screensaver.sh" \
