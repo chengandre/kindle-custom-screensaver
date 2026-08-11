@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
     paths:
       - "src/shield/**"
       - "src/scripts/**"
@@ -191,7 +193,12 @@ jobs:
           } | tee dist/build-metadata.txt
 
       - name: Package ZIP
-        run: ./scripts/package-zip.sh
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}" ./scripts/package-zip.sh
+          else
+            ./scripts/package-zip.sh
+          fi
 
       - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4
@@ -201,4 +208,45 @@ jobs:
             dist/screensaver_shield
             dist/fbink_hf
             dist/build-metadata.txt
-            release/custom-screensaver-0.1.0-kindlehf.zip
+            release/*.zip
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: custom-screensaver-kindlehf
+          path: artifact
+
+      - name: Find release ZIP
+        run: |
+          ZIP="$(find artifact \
+            -type f \
+            -name 'custom-screensaver-*-kindlehf.zip' \
+            -print \
+            -quit)"
+
+          if [ -z "$ZIP" ]; then
+            echo "Release ZIP not found"
+            exit 1
+          fi
+
+          echo "RELEASE_ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        run: |
+          gh release create \
+            "$GITHUB_REF_NAME" \
+            "$RELEASE_ZIP" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
