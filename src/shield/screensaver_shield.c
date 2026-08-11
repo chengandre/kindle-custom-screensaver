@@ -8,6 +8,8 @@
  * does not manage or reposition it.
  */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <X11/Xlib.h>
 
 #include <signal.h>
