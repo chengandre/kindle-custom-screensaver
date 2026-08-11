@@ -1,0 +1,139 @@
+name: Build KindleHF shield
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build screensaver_shield for kindlehf
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            bison \
+            flex \
+            gawk \
+            libtool \
+            libtool-bin \
+            libncurses-dev \
+            curl \
+            file \
+            git \
+            gperf \
+            help2man \
+            texinfo \
+            unzip \
+            wget \
+            sed \
+            libarchive-dev \
+            nettle-dev \
+            meson \
+            ninja-build \
+            pkg-config
+
+      - name: Clone Kindle toolchain
+        run: |
+          git clone \
+            --recursive \
+            --depth=1 \
+            https://github.com/KindleModding/koxtoolchain.git \
+            "$RUNNER_TEMP/koxtoolchain"
+
+      - name: Build kindlehf toolchain
+        working-directory: ${{ runner.temp }}/koxtoolchain
+        run: |
+          chmod +x ./gen-tc.sh
+          ./gen-tc.sh kindlehf
+
+      - name: Clone Kindle SDK
+        run: |
+          git clone \
+            --recursive \
+            --depth=1 \
+            https://github.com/KindleModding/kindle-sdk.git \
+            "$RUNNER_TEMP/kindle-sdk"
+
+      - name: Configure Kindle SDK
+        working-directory: ${{ runner.temp }}/kindle-sdk
+        run: |
+          chmod +x ./gen-sdk.sh
+          ./gen-sdk.sh kindlehf
+
+      - name: Record dependency revisions
+        run: |
+          mkdir -p dist
+
+          {
+            echo "project_commit=${GITHUB_SHA}"
+            echo "koxtoolchain_commit=$(git -C "$RUNNER_TEMP/koxtoolchain" rev-parse HEAD)"
+            echo "kindle_sdk_commit=$(git -C "$RUNNER_TEMP/kindle-sdk" rev-parse HEAD)"
+          } | tee dist/build-metadata.txt
+
+      - name: Configure Meson for kindlehf
+        run: |
+          CROSS_FILE="$HOME/x-tools/arm-kindlehf-linux-gnueabihf/meson-crosscompile.txt"
+
+          test -f "$CROSS_FILE"
+
+          meson setup \
+            --cross-file "$CROSS_FILE" \
+            build-kindlehf
+
+      - name: Compile
+        run: |
+          meson compile -C build-kindlehf
+
+      - name: Collect binary
+        run: |
+          BINARY="$(find build-kindlehf \
+            -type f \
+            -name screensaver_shield \
+            -perm -111 \
+            -print \
+            -quit)"
+
+          if [ -z "$BINARY" ]; then
+            echo "screensaver_shield was not produced"
+            exit 1
+          fi
+
+          cp "$BINARY" dist/screensaver_shield
+
+      - name: Inspect binary
+        run: |
+          echo "=== file ==="
+          file dist/screensaver_shield
+
+          echo
+          echo "=== ELF header ==="
+          readelf -h dist/screensaver_shield
+
+          echo
+          echo "=== interpreter ==="
+          readelf -l dist/screensaver_shield | grep interpreter || true
+
+          echo
+          echo "=== dynamic dependencies ==="
+          readelf -d dist/screensaver_shield | grep NEEDED || true
+
+      - name: Upload KindleHF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screensaver-shield-kindlehf
+          path: |
+            dist/screensaver_shield
+            dist/build-metadata.txt
