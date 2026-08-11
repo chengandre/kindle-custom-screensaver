@@ -2,7 +2,7 @@
 # Name: Toggle Custom Screensaver
 # DontUseFBInk
 
-BASE="/mnt/us/extensions/custom-screensaver"
+BASE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 DAEMON="$BASE/custom_ss_daemon.sh"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
