@@ -2,200 +2,354 @@
 
 A lightweight custom screensaver implementation for jailbroken Kindle devices.
 
-It keeps the normal Kindle reading experience while adding custom sleep-screen images. It does not require KOReader or KUAL, does not modify the Kindle root filesystem, and does not start automatically at boot.
+It keeps the normal Kindle reading experience while adding custom sleep-screen images. It does not require KOReader or KUAL, does not modify the Kindle system files, and does not start automatically at boot.
 
-> [!IMPORTANT]
-> This project is currently a prototype.
+> [!IMPORTANT]\
+> This project has currently been tested on a **Kindle Paperwhite 11th Generation / Paperwhite 5 (PW5)** running **firmware 5.19.2** on the `kindlehf` platform.
 >
-> Tested on a **Kindle Paperwhite 11th Generation / Paperwhite 5 (PW5)** running **firmware 5.19.2** on the hard-float platform.
+> Other Kindle models, firmware versions, and ad-supported configurations have not yet been tested.
 
-## What it does
+---
 
-The current prototype:
+## Features
 
-- displays custom PNG images when the Kindle goes to sleep;
-- supports multiple images and rotates between them;
-- scales images to fill the display;
-- works with the stock Kindle reader;
-- can be enabled or disabled from a single SH Integration Scriptlet;
-- does not require KOReader;
-- does not require KUAL;
-- does not install anything at boot;
-- restores normal Kindle screensaver behavior when disabled;
-- returns to stock behavior after a reboot.
+- Displays custom PNG images when the Kindle goes to sleep
+- Supports multiple images and rotates between them
+- Scales images to fill the display
+- Works with the stock Kindle reading interface
+- Uses a single Scriptlet that can be launched like opening a book
+- Does not require KOReader
+- Does not require KUAL
+- Does not install anything at boot
+- Restores normal Kindle screensaver behavior when disabled
+- Returns to stock behavior after a reboot
 
-The goal is to provide custom screensavers as a small standalone tweak rather than requiring a full alternative reader or a legacy launcher.
+---
 
-## Why this exists
+## Requirements
 
-I wanted custom screensavers on my Kindle without changing the way I read books.
+The ZIP installation method currently requires:
 
-KOReader is very powerful, but for my use it exposes far more features and configuration than I need. At the same time, some interactions I use frequently, such as looking up a word or opening the dictionary, take an extra step compared with the stock Kindle reader.
+- a jailbroken Kindle
+- a `kindlehf`-compatible device
+- the `custom-screensaver-*-kindlehf.zip` release package
 
-I preferred the simplicity of the stock Kindle reading interface and wanted to add only the feature I was missing: custom screensavers.
+The currently tested configuration is:
 
-Kindle Series Manager already includes an FBInk-based custom screensaver implementation, but it is currently distributed through KUAL. This project takes a similar technical approach while focusing only on custom screensavers and targeting a simpler, modern setup based on SH Integration and eventually KPM.
+| Component            | Tested configuration            |
+| -------------------- | ------------------------------- |
+| Device               | Kindle Paperwhite 11th Gen      |
+| Model                | Paperwhite 5 / PW5              |
+| Firmware             | 5.19.2                          |
+| Architecture         | Hard-float / ARMHF (`kindlehf`) |
+| Display              | 1236 × 1648                     |
+| Special Offers / ads | Not enabled                     |
+| KUAL                 | Not required                    |
+| Boot persistence     | None                            |
 
-## Tested configuration
+---
 
-| Component | Tested configuration |
-|---|---|
-| Device | Kindle Paperwhite 11th Generation |
-| Model | Paperwhite 5 / PW5 |
-| Firmware | 5.19.2 |
-| Architecture | Hard-float / ARMHF |
-| Custom shield        | `screensaver_shield` |
-| Display | 1236 × 1648 |
-| Launcher | SH Integration |
-| Special Offers / ads | Not enabled |
-| KUAL | Not required |
-| Boot persistence | None |
+## Installation
 
-Other Kindle models and ad-supported configurations have not yet been tested.
+### 1. Download the ZIP
+
+Download the `kindlehf` ZIP release package:
+
+```text
+custom-screensaver-<version>-kindlehf.zip
+```
+
+---
+
+### 2. Extract the ZIP on your computer
+
+Extract the downloaded ZIP to a folder on your computer.
+
+The extracted package should contain:
+
+```text
+documents/
+└── Custom Screensaver.sh
+
+extensions/
+└── custom-screensaver/
+    ├── custom_ss_daemon.sh
+    ├── toggle.sh
+    ├── build-metadata.txt
+    ├── THIRD_PARTY_NOTICES.md
+    ├── bin/
+    │   ├── screensaver_shield
+    │   └── fbink_hf
+    └── licenses/
+        └── FBInk/
+            ├── LICENSE
+            └── CREDITS
+
+screensavers/
+└── README.txt
+```
+
+---
+
+### 3. Connect the Kindle over USB
+
+Connect your Kindle to your computer and open the Kindle USB storage.
+
+---
+
+### 4. Copy the files to the Kindle
+
+Copy the three extracted folders into the root of the Kindle USB storage:
+
+```text
+documents/
+extensions/
+screensavers/
+```
+
+If the Kindle already contains `documents` or `extensions` folders, copy the package contents into those existing folders. Do not replace the entire existing folders.
+
+After copying, the relevant files on the Kindle should be:
+
+```text
+/ (Kindle root storage)
+├── documents/
+│   └── Custom Screensaver.sh
+├── extensions/
+│   └── custom-screensaver/
+│       ├── custom_ss_daemon.sh
+│       ├── toggle.sh
+│       ├── build-metadata.txt
+│       ├── THIRD_PARTY_NOTICES.md
+│       ├── bin/
+│       │   ├── screensaver_shield
+│       │   └── fbink_hf
+│       └── licenses/
+│           └── FBInk/
+│               ├── LICENSE
+│               └── CREDITS
+└── screensavers/
+    └── README.txt
+```
+
+---
+
+## 5. Add custom screensavers
+
+Place PNG files in:
+
+```text
+/screensavers/
+```
+
+Example:
+
+```text
+/screensavers/artwork.png
+/screensavers/landscape.png
+/screensavers/manga-panel.png
+```
+
+- Any PNG filename is supported
+- Images are rotated in filename order
+- Images are automatically scaled to fit the screen
+
+---
+
+## 6. Enable the custom screensaver
+
+Safely eject the Kindle.
+
+Then open the **Custom Screensaver Scriptlet** from your Kindle library.
+
+This Scriptlet behaves like opening a book:
+
+- First run → enables the custom screensaver
+- Second run → disables it and restores stock behavior
+
+To test:
+
+- Put the Kindle to sleep after enabling
+
+---
+
+## Updating
+
+To update:
+
+1. Disable the custom screensaver via the Scriptlet
+2. Download and extract the new ZIP on your computer
+3. Connect the Kindle over USB
+4. Copy the updated `documents` and `extensions` contents to their corresponding folders on the Kindle, allowing the custom screensaver files to be replaced
+5. Safely eject the Kindle
+6. Run the Scriptlet again
+
+Your images remain untouched in:
+
+```text
+/screensavers/
+```
+
+---
+
+## Uninstallation
+
+1. Disable the custom screensaver via the Scriptlet
+2. Remove:
+
+```text
+/documents/Custom Screensaver.sh
+/extensions/custom-screensaver/
+```
+
+Do **not** remove:
+
+```text
+/screensavers/
+```
+
+unless you also want to delete your images.
+
+A reboot also disables the system because nothing is persistent.
+
+---
 
 ## How it works
 
-The daemon listens for Kindle sleep and wake events.
+The system runs a small daemon that listens for sleep/wake events.
 
-When the Kindle goes to sleep:
+When the Kindle sleeps:
 
 ```text
 sleep event
    ↓
 screensaver_shield
    ↓
-FBInk draws the selected PNG
+FBInk renders PNG to framebuffer
    ↓
-Kindle sleeps
+Kindle enters sleep
 ```
 
-When the Kindle wakes, the shield is removed and the Kindle UI is refreshed.
-
-While enabled, the normal Kindle `screensaver` Blanket module is temporarily unloaded. Its previous state is restored when the daemon exits.
-
-Nothing is installed at boot, so restarting the Kindle disables the custom screensaver and returns the device to its normal state.
-
-## Images
-
-Screensavers are stored in:
+When the Kindle wakes:
 
 ```text
-/extensions/custom-screensaver/screensavers/
+wake event
+   ↓
+screensaver_shield exits
+   ↓
+framebuffer restored
+   ↓
+Kindle UI resumes
 ```
 
-Any PNG filename can be used, for example:
+---
 
-```text
-artwork.png
-landscape.png
-manga-panel.png
-```
+## Safety and recovery
 
-Multiple images are rotated in filename order.
+This project is intentionally non-invasive:
 
-The image does not need to match the Kindle's native resolution; FBInk scales it to fill the display.
+- no boot modifications
+- no system file changes
+- no replacement of Amazon screensavers
+- runtime state stored in `/tmp`
+- no auto-start after reboot
 
-## Prototype structure
+If something goes wrong, simply reboot the Kindle.
 
-The original manually tested prototype is retained as a reference implementation. It used the same runtime approach, but development has since moved to the project's own screensaver_shield implementation and reproducibly built FBInk binary.
+---
 
-```text
-prototype/
-├── documents/
-│   └── Toggle Custom Screensaver.sh
-│
-└── extensions/
-    └── custom-screensaver/
-        ├── custom_ss_daemon.sh
-        ├── bin/
-        │   ├── fbink_hf
-        │   └── ss_shield
-        └── screensavers/
-```
+## Special Offers / ad-supported devices
 
-`Toggle Custom Screensaver.sh` enables or disables the daemon.
+The tested device does not use Special Offers.
 
-`custom_ss_daemon.sh` handles sleep/wake events, image rotation, FBInk rendering, shield control, and restoration of the stock screensaver state.
+Ad-supported Kindle models may use a different screensaver pipeline and are currently untested.
+
+---
 
 ## Native binaries
 
-The project uses two native ARMHF binaries:
+Two ARM hard-float binaries are used:
 
-- `screensaver_shield`, implemented in this repository and cross-compiled for Kindle;
-- `fbink_hf`, built from a pinned revision of upstream FBInk.
+- `screensaver_shield` (this project)
+- `fbink_hf` (built from upstream FBInk)
 
-Both binaries are built automatically with GitHub Actions using the KindleHF
-cross-compilation toolchain.
-
-FBInk binaries are not committed to this repository. Building FBInk from pinned
-upstream source keeps the build reproducible and preserves the corresponding
-source and licensing information for distributed releases.
-
-## Safety and removal
-
-The prototype is intentionally non-persistent.
-
-It:
-
-- does not modify boot configuration;
-- does not modify Kindle system files;
-- does not replace Amazon screensaver files;
-- stores runtime state under `/tmp`;
-- does not restart after reboot.
-
-If the daemon is active, it can be disabled with the same toggle Scriptlet.
-
-A reboot also returns the Kindle to its normal configuration.
-
-This design is intentional so that the tweak remains easy to remove or replace if a better custom-screensaver solution becomes available later.
-
-## Special Offers / ad-supported Kindles
-
-The tested Kindle does not use the `ad_screensaver` Blanket module.
-
-Its normal Blanket state is:
+Build metadata is stored in:
 
 ```text
-screensaver langpicker blankwindow usb
+/extensions/custom-screensaver/build-metadata.txt
 ```
 
-Ad-supported Kindles may use a different screensaver flow. Support for those devices should preserve and restore their original Blanket state rather than assuming the same configuration.
+---
 
-Until this is tested on an actual ad-supported Kindle, that setup should be considered experimental.
+## Third-party software
 
-## Credits
+This project includes FBInk:
 
-- [FBInk](https://github.com/NiLuJe/FBInk) by NiLuJe and contributors provides
-  framebuffer rendering. Release binaries are built from pinned upstream source.
-- [Kindle Series Manager](https://github.com/mlapaglia/kindle-series-manager)
-  by mlapaglia was an important reference for the FBInk screensaver approach
-  and the original shield implementation.
+https://github.com/NiLuJe/FBInk
 
-This project now uses its own `screensaver_shield` implementation and does not
-depend on the Kindle Series Manager binaries.
+The exact FBInk revision used is recorded in `build-metadata.txt`.
+
+Licensing:
+
+```text
+/extensions/custom-screensaver/licenses/FBInk/LICENSE
+/extensions/custom-screensaver/licenses/FBInk/CREDITS
+```
+
+---
+
+## Why this exists
+
+I wanted custom screensavers on my Kindle without changing the way I read books.
+
+KOReader is powerful, but it provides far more functionality than I need for this use case. I prefer the simplicity of the stock Kindle reading experience and only wanted to add custom sleep screens.
+
+Kindle Series Manager (KSM) also provides a screensaver solution, but it depends on **KUAL**, which is part of the older Kindle modding ecosystem. KUAL-based setups are widely used but are increasingly considered legacy in modern Kindle modding workflows.
+
+This project avoids that stack entirely and focuses on a minimal, standalone approach that works directly with the stock Kindle interface.
+
+---
+
+## Project structure
+
+```text
+src/
+├── shield/
+│   └── screensaver_shield.c
+└── scripts/
+    ├── custom_ss_daemon.sh
+    └── toggle.sh
+
+packaging/
+└── zip/
+
+scripts/
+└── package-zip.sh
+
+licenses/
+└── FBInk/
+
+prototype/
+```
+
+---
 
 ## Status
 
-This is currently a working prototype.
+ZIP installation is implemented and tested on PW5 (5.19.2).
 
-Planned next steps include:
+Next steps:
 
-- refactoring the runtime into a package-independent application layout;
-- moving user screensaver images to `/screensavers`;
-- adding a simple drag-and-drop ZIP distribution;
-- adding KPM packaging;
-- packaging license and corresponding-source information for releases;
-- improving Blanket state handling;
-- testing additional Kindle models;
-- testing ad-supported devices;
-- automating complete release packaging.
+- additional device testing
+- ad-supported Kindle support
+- KPM packaging
+- improved recovery behavior
 
-The eventual goal is to support both:
+---
 
-```text
-KPM installation
-or
-drag-and-drop ZIP installation
-```
+## Credits
 
-Both installation methods will use the same runtime and allow users to manage their custom PNG files from a simple /screensavers directory.
+- FBInk by NiLuJe and contributors
+- Kindle Series Manager (KSM) for early FBInk-based screensaver inspiration
+
+This project implements its own `screensaver_shield` and does not depend on KSM or KUAL.
