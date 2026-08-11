@@ -246,7 +246,9 @@ jobs:
           gh release create \
             "$GITHUB_REF_NAME" \
             "$RELEASE_ZIP" \
+            --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" \
-            --generate-notes
+            --generate-notes \
+            --verify-tag
         env:
           GH_TOKEN: ${{ github.token }}
