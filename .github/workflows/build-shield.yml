@@ -51,38 +51,18 @@ jobs:
             meson \
             ninja-build \
             pkg-config
-
-      - name: Clone Kindle toolchain
+      - name: Install KindleHF toolchain
         run: |
-          git clone \
-            --recursive \
-            --depth=1 \
-            https://github.com/KindleModding/koxtoolchain.git \
-            "$RUNNER_TEMP/koxtoolchain"
+          wget \
+            -O "$RUNNER_TEMP/kindlehf.tar.gz" \
+            "https://github.com/KindleModding/koxtoolchain/releases/latest/download/kindlehf.tar.gz"
 
-      - name: Disable config.guess/config.sub refresh
-        run: |
-          MATCHES="$(grep -RIl '^CT_OVERRIDE_CONFIG_GUESS_SUB=y$' \
-            "$RUNNER_TEMP/koxtoolchain" || true)"
+          tar -xzf "$RUNNER_TEMP/kindlehf.tar.gz" \
+            -C "$HOME"
 
-          if [ -z "$MATCHES" ]; then
-            echo "Could not find CT_OVERRIDE_CONFIG_GUESS_SUB=y"
-            exit 1
-          fi
+          test -d "$HOME/x-tools/arm-kindlehf-linux-gnueabihf"
 
-          echo "$MATCHES"
-
-          while IFS= read -r file; do
-            sed -i \
-              's/^CT_OVERRIDE_CONFIG_GUESS_SUB=y$/# CT_OVERRIDE_CONFIG_GUESS_SUB is not set/' \
-              "$file"
-          done <<< "$MATCHES"
-
-      - name: Build kindlehf toolchain
-        working-directory: ${{ runner.temp }}/koxtoolchain
-        run: |
-          chmod +x ./gen-tc.sh
-          ./gen-tc.sh kindlehf
+          echo "KindleHF toolchain installed"
 
       - name: Clone Kindle SDK
         run: |
@@ -104,7 +84,7 @@ jobs:
 
           {
             echo "project_commit=${GITHUB_SHA}"
-            echo "koxtoolchain_commit=$(git -C "$RUNNER_TEMP/koxtoolchain" rev-parse HEAD)"
+            echo "toolchain=KindleModding/koxtoolchain prebuilt kindlehf"
             echo "kindle_sdk_commit=$(git -C "$RUNNER_TEMP/kindle-sdk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
 
