@@ -1,0 +1,1 @@
+Place your custom screensaver PNG files in this folder.
