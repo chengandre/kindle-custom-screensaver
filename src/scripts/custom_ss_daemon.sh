@@ -1,8 +1,8 @@
 #!/bin/sh
 
-BASE="/mnt/us/extensions/custom-screensaver"
+BASE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 BIN="$BASE/bin"
-SS_DIR="$BASE/screensavers"
+SS_DIR="/mnt/us/screensavers"
 
 FBINK="$BIN/fbink_hf"
 SHIELD="$BIN/screensaver_shield"
