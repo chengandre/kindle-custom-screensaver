@@ -201,4 +201,4 @@ jobs:
             dist/screensaver_shield
             dist/fbink_hf
             dist/build-metadata.txt
-            release/custom-screensaver-kindlehf.zip
+            release/custom-screensaver-0.1.0-kindlehf.zip

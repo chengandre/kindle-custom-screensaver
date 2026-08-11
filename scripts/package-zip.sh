@@ -3,6 +3,9 @@ set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
+VERSION="0.1.0"
+PACKAGE_NAME="custom-screensaver-${VERSION}-kindlehf.zip"
+
 DIST="$ROOT/dist"
 STAGING="$ROOT/build/package-zip"
 OUTPUT="$ROOT/release"
@@ -81,15 +84,15 @@ chmod +x \
     "$APP/bin/screensaver_shield" \
     "$APP/bin/fbink_hf"
 
-rm -f "$OUTPUT/custom-screensaver-kindlehf.zip"
+rm -f "$OUTPUT/$PACKAGE_NAME"
 
 (
     cd "$STAGING"
-    zip -r "$OUTPUT/custom-screensaver-kindlehf.zip" \
+    zip -r "$OUTPUT/$PACKAGE_NAME" \
         documents \
         extensions \
         screensavers
 )
 
 echo "Created:"
-echo "$OUTPUT/custom-screensaver-kindlehf.zip"
+echo "$OUTPUT/$PACKAGE_NAME"
