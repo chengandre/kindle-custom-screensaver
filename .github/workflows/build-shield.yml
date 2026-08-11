@@ -2,6 +2,13 @@ name: Build KindleHF shield
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - refactor
+    paths:
+      - "src/shield/**"
+      - "meson.build"
+      - ".github/workflows/build-shield.yml"
 
 permissions:
   contents: read
