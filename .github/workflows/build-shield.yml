@@ -60,6 +60,24 @@ jobs:
             https://github.com/KindleModding/koxtoolchain.git \
             "$RUNNER_TEMP/koxtoolchain"
 
+      - name: Disable config.guess/config.sub refresh
+        run: |
+          MATCHES="$(grep -RIl '^CT_OVERRIDE_CONFIG_GUESS_SUB=y$' \
+            "$RUNNER_TEMP/koxtoolchain" || true)"
+
+          if [ -z "$MATCHES" ]; then
+            echo "Could not find CT_OVERRIDE_CONFIG_GUESS_SUB=y"
+            exit 1
+          fi
+
+          echo "$MATCHES"
+
+          while IFS= read -r file; do
+            sed -i \
+              's/^CT_OVERRIDE_CONFIG_GUESS_SUB=y$/# CT_OVERRIDE_CONFIG_GUESS_SUB is not set/' \
+              "$file"
+          done <<< "$MATCHES"
+
       - name: Build kindlehf toolchain
         working-directory: ${{ runner.temp }}/koxtoolchain
         run: |
