@@ -11,7 +11,8 @@ APP="$STAGING/extensions/custom-screensaver"
 
 for file in \
     "$DIST/screensaver_shield" \
-    "$DIST/fbink_hf"
+    "$DIST/fbink_hf" \
+    "$DIST/build-metadata.txt"
 do
     if [ ! -f "$file" ]; then
         echo "Missing required file: $file" >&2
@@ -24,6 +25,7 @@ rm -rf "$STAGING"
 mkdir -p \
     "$STAGING/documents" \
     "$APP/bin" \
+    "$APP/licenses/FBInk" \
     "$STAGING/screensavers" \
     "$OUTPUT"
 
@@ -44,12 +46,28 @@ cp \
     "$APP/toggle.sh"
 
 cp \
+    "$ROOT/THIRD_PARTY_NOTICES.md" \
+    "$APP/THIRD_PARTY_NOTICES.md"
+
+cp \
+    "$ROOT/licenses/FBInk/LICENSE" \
+    "$APP/licenses/FBInk/LICENSE"
+
+cp \
+    "$ROOT/licenses/FBInk/CREDITS" \
+    "$APP/licenses/FBInk/CREDITS"
+
+cp \
     "$DIST/screensaver_shield" \
     "$APP/bin/screensaver_shield"
 
 cp \
     "$DIST/fbink_hf" \
     "$APP/bin/fbink_hf"
+
+cp \
+    "$DIST/build-metadata.txt" \
+    "$APP/build-metadata.txt"
 
 chmod +x \
     "$STAGING/documents/Custom Screensaver.sh" \
