@@ -44,6 +44,7 @@ Kindle Series Manager already includes an FBInk-based custom screensaver impleme
 | Model | Paperwhite 5 / PW5 |
 | Firmware | 5.19.2 |
 | Architecture | Hard-float / ARMHF |
+| Custom shield        | `screensaver_shield` |
 | Display | 1236 × 1648 |
 | Launcher | SH Integration |
 | Special Offers / ads | Not enabled |
@@ -61,7 +62,7 @@ When the Kindle goes to sleep:
 ```text
 sleep event
    ↓
-ss_shield
+screensaver_shield
    ↓
 FBInk draws the selected PNG
    ↓
@@ -96,6 +97,8 @@ The image does not need to match the Kindle's native resolution; FBInk scales it
 
 ## Prototype structure
 
+The original manually tested prototype is retained as a reference implementation. It used the same runtime approach, but development has since moved to the project's own screensaver_shield implementation and reproducibly built FBInk binary.
+
 ```text
 prototype/
 ├── documents/
@@ -113,6 +116,20 @@ prototype/
 `Toggle Custom Screensaver.sh` enables or disables the daemon.
 
 `custom_ss_daemon.sh` handles sleep/wake events, image rotation, FBInk rendering, shield control, and restoration of the stock screensaver state.
+
+## Native binaries
+
+The project uses two native ARMHF binaries:
+
+- `screensaver_shield`, implemented in this repository and cross-compiled for Kindle;
+- `fbink_hf`, built from a pinned revision of upstream FBInk.
+
+Both binaries are built automatically with GitHub Actions using the KindleHF
+cross-compilation toolchain.
+
+FBInk binaries are not committed to this repository. Building FBInk from pinned
+upstream source keeps the build reproducible and preserves the corresponding
+source and licensing information for distributed releases.
 
 ## Safety and removal
 
@@ -148,14 +165,14 @@ Until this is tested on an actual ad-supported Kindle, that setup should be cons
 
 ## Credits
 
-This project uses:
+- [FBInk](https://github.com/NiLuJe/FBInk) by NiLuJe and contributors provides
+  framebuffer rendering. Release binaries are built from pinned upstream source.
+- [Kindle Series Manager](https://github.com/mlapaglia/kindle-series-manager)
+  by mlapaglia was an important reference for the FBInk screensaver approach
+  and the original shield implementation.
 
-- [FBInk](https://github.com/NiLuJe/FBInk) by NiLuJe and contributors for framebuffer rendering.
-- `ss_shield` and the general FBInk screensaver approach from [Kindle Series Manager](https://github.com/mlapaglia/kindle-series-manager) by mlapaglia.
-
-Kindle Series Manager was an important reference for the sleep-screen implementation used in this prototype.
-
-See `THIRD_PARTY_NOTICES.md` for third-party attribution and licensing details.
+This project now uses its own `screensaver_shield` implementation and does not
+depend on the Kindle Series Manager binaries.
 
 ## Status
 
@@ -163,20 +180,22 @@ This is currently a working prototype.
 
 Planned next steps include:
 
-- refactoring the prototype into a proper application layout;
+- refactoring the runtime into a package-independent application layout;
+- moving user screensaver images to `/screensavers`;
+- adding a simple drag-and-drop ZIP distribution;
+- adding KPM packaging;
+- packaging license and corresponding-source information for releases;
 - improving Blanket state handling;
 - testing additional Kindle models;
 - testing ad-supported devices;
-- adding a standalone installer;
-- adding KPM packaging;
-- automating release builds.
+- automating complete release packaging.
 
 The eventual goal is to support both:
 
 ```text
 KPM installation
 or
-standalone installer Scriptlet
+drag-and-drop ZIP installation
 ```
 
-without requiring users to manually copy individual files.
+Both installation methods will use the same runtime and allow users to manage their custom PNG files from a simple /screensavers directory.

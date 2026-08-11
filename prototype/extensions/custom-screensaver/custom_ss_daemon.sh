@@ -5,7 +5,7 @@ BIN="$BASE/bin"
 SS_DIR="$BASE/screensavers"
 
 FBINK="$BIN/fbink_hf"
-SHIELD="$BIN/ss_shield"
+SHIELD="$BIN/screensaver_shield"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
