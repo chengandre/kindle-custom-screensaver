@@ -20,3 +20,5 @@ release/
 Thumbs.db
 *.swp
 *~
+
+testing/

@@ -4,11 +4,6 @@ A lightweight custom screensaver implementation for jailbroken Kindle devices.
 
 It keeps the normal Kindle reading experience while adding custom sleep-screen images. It does not require KOReader or KUAL, does not modify the Kindle system files, and does not start automatically at boot.
 
-> [!IMPORTANT]\
-> This project has currently been tested on a **Kindle Paperwhite 11th Generation / Paperwhite 5 (PW5)** running **firmware 5.19.2** on the `kindlehf` platform.
->
-> Other Kindle models, firmware versions, and ad-supported configurations have not yet been tested.
-
 ---
 
 ## Features
@@ -34,18 +29,16 @@ The ZIP installation method currently requires:
 - a `kindlehf`-compatible device
 - the `custom-screensaver-*-kindlehf.zip` release package
 
-The currently tested configuration is:
+### Tested devices
 
-| Component            | Tested configuration            |
-| -------------------- | ------------------------------- |
-| Device               | Kindle Paperwhite 11th Gen      |
-| Model                | Paperwhite 5 / PW5              |
-| Firmware             | 5.19.2                          |
-| Architecture         | Hard-float / ARMHF (`kindlehf`) |
-| Display              | 1236 × 1648                     |
-| Special Offers / ads | Not enabled                     |
-| KUAL                 | Not required                    |
-| Boot persistence     | None                            |
+The project has been confirmed to work on these devices and firmware versions:
+
+| Device                       | Model                 | Firmware           |
+| ---------------------------- | --------------------- | ------------------ |
+| Kindle Paperwhite 11th Gen   | Paperwhite 5 / PW5    | 5.19.2             |
+| Kindle Paperwhite 12th Gen   | Paperwhite 6 / PW6    | 5.18.6, 5.19.5, 5.19.6 |
+
+Other `kindlehf`-compatible devices may also work but have not yet been reported.
 
 ---
 
@@ -260,8 +253,6 @@ If something goes wrong, simply reboot the Kindle.
 
 ## Special Offers / ad-supported devices
 
-The tested device does not use Special Offers.
-
 Ad-supported Kindle models may use a different screensaver pipeline and are currently untested.
 
 ---
@@ -336,7 +327,7 @@ prototype/
 
 ## Status
 
-ZIP installation is implemented and tested on PW5 (5.19.2).
+ZIP installation is implemented and confirmed on PW5 and PW6. See [Tested devices](#tested-devices) for known firmware versions.
 
 Next steps:
 
