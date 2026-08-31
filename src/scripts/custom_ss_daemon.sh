@@ -9,11 +9,13 @@ SHIELD="$BIN/screensaver_shield"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
-STATEFILE="/tmp/custom_ss_restore_screensaver"
+STATEFILE="/tmp/custom_ss_restore_renderers"
 INDEXFILE="/tmp/custom_ss_last"
 FIFO="/tmp/custom_ss_events.fifo"
 
 LOG="$BASE/custom_ss.log"
+
+. "$BASE/blanket_renderers.sh"
 
 SLEEP_PID=""
 WAKE_PID=""
@@ -22,13 +24,6 @@ CLEANED=0
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"
-}
-
-
-has_screensaver_module() {
-    lipc-get-prop com.lab126.blanket load 2>/dev/null |
-        tr ' ' '\n' |
-        grep -qx "screensaver"
 }
 
 
@@ -59,25 +54,6 @@ shield_up() {
 }
 
 
-restore_screensaver() {
-    if [ -f "$STATEFILE" ]; then
-        RESTORE="$(cat "$STATEFILE" 2>/dev/null)"
-
-        if [ "$RESTORE" = "1" ]; then
-            if ! has_screensaver_module; then
-                lipc-set-prop \
-                    com.lab126.blanket \
-                    load screensaver >>"$LOG" 2>&1
-
-                log "Stock screensaver module restored"
-            else
-                log "Stock screensaver already loaded"
-            fi
-        fi
-    fi
-}
-
-
 cleanup() {
     if [ "$CLEANED" -eq 1 ]; then
         return
@@ -102,10 +78,13 @@ cleanup() {
 
     rm -f "$FIFO"
 
-    restore_screensaver
+    if restore_original_renderers; then
+        rm -f "$STATEFILE"
+    else
+        log "ERROR: renderer restore incomplete; preserving $STATEFILE for emergency cleanup"
+    fi
 
     rm -f "$PIDFILE"
-    rm -f "$STATEFILE"
     rm -f "$INDEXFILE"
 
     DISPLAY=:0 xrefresh >>"$LOG" 2>&1
@@ -186,16 +165,21 @@ echo $$ > "$PIDFILE"
 
 
 #
-# Remember the ORIGINAL screensaver state.
+# Remember the original renderer state before modifying Blanket.
 #
 
-if has_screensaver_module; then
-    echo "1" > "$STATEFILE"
-    log "Original state: stock screensaver loaded"
-else
-    echo "0" > "$STATEFILE"
-    log "Original state: stock screensaver not loaded"
+if ! capture_renderer_state; then
+    rm -f "$PIDFILE" "$STATEFILE"
+    exit 1
 fi
+
+
+#
+# Clean up every resource acquired from this point onward.
+#
+
+trap 'cleanup; exit 0' HUP INT TERM
+trap 'cleanup' EXIT
 
 
 #
@@ -221,25 +205,13 @@ lipc-wait-event \
     outOfScreenSaver >&3 2>>"$LOG" &
 WAKE_PID=$!
 
-
 #
-# Install cleanup before touching Blanket.
-#
-
-trap 'cleanup; exit 0' HUP INT TERM
-trap 'cleanup' EXIT
-
-
-#
-# Disable ONLY Amazon's regular screensaver renderer.
+# Disable the Amazon renderer(s) that were active at startup.
 #
 
-if has_screensaver_module; then
-    lipc-set-prop \
-        com.lab126.blanket \
-        unload screensaver >>"$LOG" 2>&1
-
-    log "Stock screensaver module unloaded"
+if ! disable_original_renderers; then
+    log "ERROR: renderer startup changes failed; shutting daemon down"
+    exit 1
 fi
 
 log "READY"

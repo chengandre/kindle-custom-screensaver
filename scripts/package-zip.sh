@@ -50,6 +50,10 @@ cp \
     "$APP/toggle.sh"
 
 cp \
+    "$ROOT/src/scripts/blanket_renderers.sh" \
+    "$APP/blanket_renderers.sh"
+
+cp \
     "$ROOT/THIRD_PARTY_NOTICES.md" \
     "$APP/THIRD_PARTY_NOTICES.md"
 

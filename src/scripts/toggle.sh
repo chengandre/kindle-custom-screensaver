@@ -7,22 +7,17 @@ DAEMON="$BASE/custom_ss_daemon.sh"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
-STATEFILE="/tmp/custom_ss_restore_screensaver"
+STATEFILE="/tmp/custom_ss_restore_renderers"
 INDEXFILE="/tmp/custom_ss_last"
 FIFO="/tmp/custom_ss_events.fifo"
 
 LOG="$BASE/launcher.log"
 
+. "$BASE/blanket_renderers.sh"
+
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"
-}
-
-
-has_screensaver_module() {
-    lipc-get-prop com.lab126.blanket load 2>/dev/null |
-        tr ' ' '\n' |
-        grep -qx "screensaver"
 }
 
 
@@ -54,6 +49,8 @@ daemon_is_running() {
 
 
 emergency_cleanup() {
+    EMERGENCY_RESULT=0
+
     #
     # Kill a leftover shield, if there is one.
     #
@@ -68,30 +65,30 @@ emergency_cleanup() {
     fi
 
     #
-    # If the daemon left behind its original-state record,
-    # restore the stock screensaver if necessary.
+    # If the daemon left behind its original-state record, restore the exact
+    # renderer set that was active before startup.
     #
-    if [ -f "$STATEFILE" ]; then
-        RESTORE="$(cat "$STATEFILE" 2>/dev/null)"
-
-        if [ "$RESTORE" = "1" ]; then
-            if ! has_screensaver_module; then
-                lipc-set-prop \
-                    com.lab126.blanket \
-                    load screensaver >>"$LOG" 2>&1
-
-                log "Emergency restore: stock screensaver loaded"
-            fi
+    if restore_original_renderers; then
+        if [ -f "$STATEFILE" ]; then
+            log "Emergency renderer restore complete"
         fi
+    else
+        log "ERROR: emergency renderer restore incomplete"
+        EMERGENCY_RESULT=1
     fi
 
     rm -f \
         "$PIDFILE" \
-        "$STATEFILE" \
         "$INDEXFILE" \
         "$FIFO"
 
+    if [ "$EMERGENCY_RESULT" -eq 0 ]; then
+        rm -f "$STATEFILE"
+    fi
+
     DISPLAY=:0 xrefresh >>"$LOG" 2>&1
+
+    return "$EMERGENCY_RESULT"
 }
 
 
@@ -115,8 +112,8 @@ disable_custom_ss() {
         COUNT=$((COUNT + 1))
 
         if [ "$COUNT" -ge 5 ]; then
-            log "Daemon did not exit within 5 seconds"
-            break
+            log "ERROR: daemon did not exit within 5 seconds"
+            return 1
         fi
     done
 
@@ -124,7 +121,10 @@ disable_custom_ss() {
     # Normally the daemon has already cleaned everything.
     # This catches anything left behind.
     #
-    emergency_cleanup
+    if ! emergency_cleanup; then
+        log "ERROR: custom screensaver disabled, but renderer restoration failed"
+        return 1
+    fi
 
     log "Custom screensaver DISABLED"
 }
@@ -139,7 +139,10 @@ enable_custom_ss() {
     #
     # Clean any stale files from an abnormal previous exit.
     #
-    emergency_cleanup
+    if ! emergency_cleanup; then
+        log "ERROR: cannot enable while renderer restoration is incomplete"
+        exit 1
+    fi
 
     chmod +x "$DAEMON"
 
@@ -189,5 +192,3 @@ else
 
     enable_custom_ss
 fi
-
-exit 0

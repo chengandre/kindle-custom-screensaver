@@ -67,6 +67,7 @@ documents/
 extensions/
 └── custom-screensaver/
     ├── custom_ss_daemon.sh
+    ├── blanket_renderers.sh
     ├── toggle.sh
     ├── build-metadata.txt
     ├── THIRD_PARTY_NOTICES.md
@@ -111,6 +112,7 @@ After copying, the relevant files on the Kindle should be:
 ├── extensions/
 │   └── custom-screensaver/
 │       ├── custom_ss_daemon.sh
+│       ├── blanket_renderers.sh
 │       ├── toggle.sh
 │       ├── build-metadata.txt
 │       ├── THIRD_PARTY_NOTICES.md
@@ -253,7 +255,8 @@ If something goes wrong, simply reboot the Kindle.
 
 ## Special Offers / ad-supported devices
 
-Ad-supported Kindle models may use a different screensaver pipeline and are currently untested.
+Support for `ad_screensaver` has not yet been verified on a physical Special
+Offers Kindle.
 
 ---
 
@@ -308,6 +311,7 @@ src/
 ├── shield/
 │   └── screensaver_shield.c
 └── scripts/
+    ├── blanket_renderers.sh
     ├── custom_ss_daemon.sh
     └── toggle.sh
 
@@ -332,7 +336,7 @@ ZIP installation is implemented and confirmed on PW5 and PW6. See [Tested device
 Next steps:
 
 - additional device testing
-- ad-supported Kindle support
+- physical verification on a Special Offers Kindle
 - KPM packaging
 - improved recovery behavior
 
