@@ -45,6 +45,7 @@ jobs:
             unzip \
             wget \
             sed \
+            jq \
             libarchive-dev \
             nettle-dev \
             meson \
@@ -183,18 +184,37 @@ jobs:
             echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
 
-      - name: Package release artifacts
+      - name: Determine package version
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            if ! printf '%s\n' "$GITHUB_REF_NAME" \
+              | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'
+            then
+              echo "::error::Unsupported release tag '$GITHUB_REF_NAME'. KPM release tags must use vMAJOR.MINOR.PATCH with three numeric components."
+              exit 1
+            fi
+
             VERSION="${GITHUB_REF_NAME#v}"
-            export VERSION
           else
             VERSION="0.0.${GITHUB_RUN_NUMBER}"
-            export VERSION
           fi
 
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Package release artifacts
+        run: |
           ./scripts/package-zip.sh
           ./scripts/package-kpm.sh
+
+      - name: Validate release artifacts
+        run: |
+          unzip -t \
+            "release/custom-screensaver-${VERSION}-kindlehf.zip"
+
+          ./scripts/validate-kpm.sh \
+            "release/custom-screensaver_${VERSION}_kindlehf.kpkg" \
+            "$VERSION" \
+            release/kpm-repository.json
 
       - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4

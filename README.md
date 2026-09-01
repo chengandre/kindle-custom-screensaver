@@ -368,7 +368,8 @@ packaging/
 scripts/
 ├── package-kpm.sh
 ├── package-zip.sh
-└── stage-runtime.sh
+├── stage-runtime.sh
+└── validate-kpm.sh
 
 licenses/
 └── FBInk/
