@@ -14,6 +14,8 @@ jobs:
     name: Build native binaries for kindlehf
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    outputs:
+      is_release: ${{ steps.version.outputs.is_release }}
 
     steps:
       - name: Checkout project
@@ -185,6 +187,7 @@ jobs:
           } | tee dist/build-metadata.txt
 
       - name: Determine package version
+        id: version
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             if ! printf '%s\n' "$GITHUB_REF_NAME" \
@@ -195,8 +198,10 @@ jobs:
             fi
 
             VERSION="${GITHUB_REF_NAME#v}"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
           else
             VERSION="0.0.${GITHUB_RUN_NUMBER}"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
           fi
 
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
@@ -299,3 +304,54 @@ jobs:
             --verify-tag
         env:
           GH_TOKEN: ${{ github.token }}
+
+  pages:
+    name: Deploy KPM repository to GitHub Pages
+    needs: build
+    if: >-
+      github.event_name == 'push' &&
+      github.ref_type == 'tag' &&
+      needs.build.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: custom-screensaver-kindlehf
+          path: artifact
+
+      - name: Prepare GitHub Pages content
+        run: |
+          REPOSITORY_MANIFEST="$(find artifact \
+            -type f \
+            -name 'kpm-repository.json' \
+            -print \
+            -quit)"
+
+          if [ -z "$REPOSITORY_MANIFEST" ]; then
+            echo "KPM repository manifest not found"
+            exit 1
+          fi
+
+          mkdir pages
+          cp "$REPOSITORY_MANIFEST" pages/kpm.json
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

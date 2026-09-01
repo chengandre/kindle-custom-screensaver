@@ -1,8 +1,8 @@
 # Kindle Custom Screensaver
 
-A lightweight custom screensaver implementation for jailbroken Kindle devices.
+A **lightweight custom screensaver** implementation for jailbroken Kindle devices.
 
-It keeps the normal Kindle reading experience while adding custom sleep-screen images. It does not require KOReader or KUAL, does not modify the Kindle system files, and does not start automatically at boot.
+It keeps the **normal Kindle reading experience** while adding custom sleep-screen images. It **does not require KOReader or KUAL**  , does not modify the Kindle system files, and does not start automatically at boot.
 
 ---
 
@@ -46,13 +46,13 @@ Other `kindlehf`-compatible devices may also work but have not yet been reported
 
 ## KPM installation
 
-The project publishes its own KPM repository through GitHub Releases; it does
-not depend on the package being accepted into the official repository.
+The project publishes its own KPM repository.
 
 In the Kindle search bar, add the repository and refresh KPM's package index:
 
 ```text
-;kpm add-repo https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json
+;kpm add-repo https://kpm.andrecheng.com/kpm.json
+# or ;kpm add-repo https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json
 ;kpm update
 ```
 
@@ -62,19 +62,12 @@ Install the package:
 ;kpm install custom-screensaver
 ```
 
+After installation, upload your PNG screensaver images to the Kindle's
+`/screensavers/` folder.
+
 KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs
 the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates
 `/mnt/us/screensavers/` if needed.
-
-To update KPM's index and upgrade installed packages:
-
-```text
-;kpm update
-;kpm upgrade
-```
-
-The upgrade stops the custom screensaver before replacing its runtime. Your
-screensaver images are preserved.
 
 To uninstall:
 
