@@ -23,11 +23,13 @@ It keeps the normal Kindle reading experience while adding custom sleep-screen i
 
 ## Requirements
 
-The ZIP installation method currently requires:
+Both installation methods require:
 
 - a jailbroken Kindle
 - a `kindlehf`-compatible device
-- the `custom-screensaver-*-kindlehf.zip` release package
+
+KPM installation also requires Kindle Package Manager. Manual installation uses
+the `custom-screensaver-*-kindlehf.zip` release package.
 
 ### Tested devices
 
@@ -42,7 +44,50 @@ Other `kindlehf`-compatible devices may also work but have not yet been reported
 
 ---
 
-## Installation
+## KPM installation
+
+The project publishes its own KPM repository through GitHub Releases; it does
+not depend on the package being accepted into the official repository.
+
+In the Kindle search bar, add the repository and refresh KPM's package index:
+
+```text
+;kpm add-repo https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json
+;kpm update
+```
+
+Install the package:
+
+```text
+;kpm install custom-screensaver
+```
+
+KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs
+the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates
+`/mnt/us/screensavers/` if needed.
+
+To update KPM's index and upgrade installed packages:
+
+```text
+;kpm update
+;kpm upgrade
+```
+
+The upgrade stops the custom screensaver before replacing its runtime. Your
+screensaver images are preserved.
+
+To uninstall:
+
+```text
+;kpm uninstall custom-screensaver
+```
+
+Uninstalling removes the runtime and package-owned Scriptlet but preserves
+`/mnt/us/screensavers/` and every image in it.
+
+---
+
+## ZIP installation
 
 ### 1. Download the ZIP
 
@@ -129,7 +174,7 @@ After copying, the relevant files on the Kindle should be:
 
 ---
 
-## 5. Add custom screensavers
+### 5. Add custom screensavers
 
 Place PNG files in:
 
@@ -151,7 +196,7 @@ Example:
 
 ---
 
-## 6. Enable the custom screensaver
+### 6. Enable the custom screensaver
 
 Safely eject the Kindle.
 
@@ -168,7 +213,7 @@ To test:
 
 ---
 
-## Updating
+## Updating a ZIP installation
 
 To update:
 
@@ -187,7 +232,7 @@ Your images remain untouched in:
 
 ---
 
-## Uninstallation
+## Uninstalling a ZIP installation
 
 1. Disable the custom screensaver via the Scriptlet
 2. Remove:
@@ -316,10 +361,14 @@ src/
     └── toggle.sh
 
 packaging/
+├── common/
+├── kpm/
 └── zip/
 
 scripts/
-└── package-zip.sh
+├── package-kpm.sh
+├── package-zip.sh
+└── stage-runtime.sh
 
 licenses/
 └── FBInk/
@@ -331,13 +380,14 @@ prototype/
 
 ## Status
 
-ZIP installation is implemented and confirmed on PW5 and PW6. See [Tested devices](#tested-devices) for known firmware versions.
+ZIP installation is confirmed on PW5 and PW6. KPM packaging and lifecycle
+support are implemented but still require physical-device validation. See
+[Tested devices](#tested-devices) for known firmware versions.
 
 Next steps:
 
 - additional device testing
 - physical verification on a Special Offers Kindle
-- KPM packaging
 - improved recovery behavior
 
 ---

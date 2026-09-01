@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "id": "chengandre-kindle-custom-screensaver",
+  "name": "Kindle Custom Screensaver",
+  "description": "Self-hosted KPM repository for Kindle Custom Screensaver.",
+  "packages": {
+    "custom-screensaver": {
+      "name": "Kindle Custom Screensaver",
+      "author": "Andre Cheng",
+      "description": "Custom PNG sleep-screen images while retaining the stock Kindle reading interface.",
+      "artifacts": [
+        {
+          "url": "https://github.com/chengandre/kindle-custom-screensaver/releases/download/v0.2.0/custom-screensaver_0.2.0_kindlehf.kpkg",
+          "version": [
+            0,
+            2,
+            0
+          ],
+          "dependencies": [],
+          "supported_platforms": [
+            "kindlehf"
+          ]
+        }
+      ]
+    }
+  }
+}

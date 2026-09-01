@@ -3,7 +3,7 @@ set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-0.0.1}"
 PACKAGE_NAME="custom-screensaver-${VERSION}-kindlehf.zip"
 
 DIST="$ROOT/dist"
@@ -12,81 +12,25 @@ OUTPUT="$ROOT/release"
 
 APP="$STAGING/extensions/custom-screensaver"
 
-for file in \
-    "$DIST/screensaver_shield" \
-    "$DIST/fbink_hf" \
-    "$DIST/build-metadata.txt" \
-    "$ROOT/LICENSE"
-do
-    if [ ! -f "$file" ]; then
-        echo "Missing required file: $file" >&2
-        exit 1
-    fi
-done
-
 rm -rf "$STAGING"
 
 mkdir -p \
     "$STAGING/documents" \
-    "$APP/bin" \
-    "$APP/licenses/FBInk" \
     "$STAGING/screensavers" \
     "$OUTPUT"
 
 cp \
-    "$ROOT/packaging/zip/documents/Custom Screensaver.sh" \
+    "$ROOT/packaging/common/documents/Custom Screensaver.sh" \
     "$STAGING/documents/Custom Screensaver.sh"
 
 cp \
     "$ROOT/packaging/zip/screensavers/README.txt" \
     "$STAGING/screensavers/README.txt"
 
-cp \
-    "$ROOT/src/scripts/custom_ss_daemon.sh" \
-    "$APP/custom_ss_daemon.sh"
-
-cp \
-    "$ROOT/src/scripts/toggle.sh" \
-    "$APP/toggle.sh"
-
-cp \
-    "$ROOT/src/scripts/blanket_renderers.sh" \
-    "$APP/blanket_renderers.sh"
-
-cp \
-    "$ROOT/THIRD_PARTY_NOTICES.md" \
-    "$APP/THIRD_PARTY_NOTICES.md"
-
-cp \
-    "$ROOT/licenses/FBInk/LICENSE" \
-    "$APP/licenses/FBInk/LICENSE"
-
-cp \
-    "$ROOT/licenses/FBInk/CREDITS" \
-    "$APP/licenses/FBInk/CREDITS"
-
-cp \
-    "$DIST/screensaver_shield" \
-    "$APP/bin/screensaver_shield"
-
-cp \
-    "$DIST/fbink_hf" \
-    "$APP/bin/fbink_hf"
-
-cp \
-    "$DIST/build-metadata.txt" \
-    "$APP/build-metadata.txt"
-
-cp \
-    "$ROOT/LICENSE" \
-    "$APP/LICENSE"
+"$ROOT/scripts/stage-runtime.sh" "$APP"
 
 chmod +x \
-    "$STAGING/documents/Custom Screensaver.sh" \
-    "$APP/custom_ss_daemon.sh" \
-    "$APP/toggle.sh" \
-    "$APP/bin/screensaver_shield" \
-    "$APP/bin/fbink_hf"
+    "$STAGING/documents/Custom Screensaver.sh"
 
 rm -f "$OUTPUT/$PACKAGE_NAME"
 

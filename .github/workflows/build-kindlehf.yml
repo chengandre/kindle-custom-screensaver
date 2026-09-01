@@ -183,13 +183,18 @@ jobs:
             echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
 
-      - name: Package ZIP
+      - name: Package release artifacts
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSION="${GITHUB_REF_NAME#v}" ./scripts/package-zip.sh
+            VERSION="${GITHUB_REF_NAME#v}"
+            export VERSION
           else
-            ./scripts/package-zip.sh
+            VERSION="0.0.${GITHUB_RUN_NUMBER}"
+            export VERSION
           fi
+
+          ./scripts/package-zip.sh
+          ./scripts/package-kpm.sh
 
       - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4
@@ -200,6 +205,8 @@ jobs:
             dist/fbink_hf
             dist/build-metadata.txt
             release/*.zip
+            release/*.kpkg
+            release/kpm-repository.json
 
   release:
     name: Publish GitHub Release
@@ -220,7 +227,7 @@ jobs:
           name: custom-screensaver-kindlehf
           path: artifact
 
-      - name: Find release ZIP
+      - name: Find release files
         run: |
           ZIP="$(find artifact \
             -type f \
@@ -233,13 +240,39 @@ jobs:
             exit 1
           fi
 
+          KPKG="$(find artifact \
+            -type f \
+            -name 'custom-screensaver_*_kindlehf.kpkg' \
+            -print \
+            -quit)"
+
+          if [ -z "$KPKG" ]; then
+            echo "Release KPM package not found"
+            exit 1
+          fi
+
+          REPOSITORY_MANIFEST="$(find artifact \
+            -type f \
+            -name 'kpm-repository.json' \
+            -print \
+            -quit)"
+
+          if [ -z "$REPOSITORY_MANIFEST" ]; then
+            echo "KPM repository manifest not found"
+            exit 1
+          fi
+
           echo "RELEASE_ZIP=$ZIP" >> "$GITHUB_ENV"
+          echo "RELEASE_KPKG=$KPKG" >> "$GITHUB_ENV"
+          echo "REPOSITORY_MANIFEST=$REPOSITORY_MANIFEST" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         run: |
           gh release create \
             "$GITHUB_REF_NAME" \
             "$RELEASE_ZIP" \
+            "$RELEASE_KPKG" \
+            "$REPOSITORY_MANIFEST" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Kindle Custom Screensaver ${GITHUB_REF_NAME}" \
             --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
