@@ -14,6 +14,8 @@ jobs:
     name: Build native binaries for kindlehf
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    outputs:
+      is_release: ${{ steps.version.outputs.is_release }}
 
     steps:
       - name: Checkout project
@@ -45,6 +47,7 @@ jobs:
             unzip \
             wget \
             sed \
+            jq \
             libarchive-dev \
             nettle-dev \
             meson \
@@ -183,13 +186,40 @@ jobs:
             echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
 
-      - name: Package ZIP
+      - name: Determine package version
+        id: version
         run: |
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            VERSION="${GITHUB_REF_NAME#v}" ./scripts/package-zip.sh
+            if ! printf '%s\n' "$GITHUB_REF_NAME" \
+              | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'
+            then
+              echo "::error::Unsupported release tag '$GITHUB_REF_NAME'. KPM release tags must use vMAJOR.MINOR.PATCH with three numeric components."
+              exit 1
+            fi
+
+            VERSION="${GITHUB_REF_NAME#v}"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
           else
-            ./scripts/package-zip.sh
+            VERSION="0.0.${GITHUB_RUN_NUMBER}"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
           fi
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Package release artifacts
+        run: |
+          ./scripts/package-zip.sh
+          ./scripts/package-kpm.sh
+
+      - name: Validate release artifacts
+        run: |
+          unzip -t \
+            "release/custom-screensaver-${VERSION}-kindlehf.zip"
+
+          ./scripts/validate-kpm.sh \
+            "release/custom-screensaver_${VERSION}_kindlehf.kpkg" \
+            "$VERSION" \
+            release/kpm-repository.json
 
       - name: Upload KindleHF artifacts
         uses: actions/upload-artifact@v4
@@ -200,6 +230,8 @@ jobs:
             dist/fbink_hf
             dist/build-metadata.txt
             release/*.zip
+            release/*.kpkg
+            release/kpm-repository.json
 
   release:
     name: Publish GitHub Release
@@ -220,7 +252,7 @@ jobs:
           name: custom-screensaver-kindlehf
           path: artifact
 
-      - name: Find release ZIP
+      - name: Find release files
         run: |
           ZIP="$(find artifact \
             -type f \
@@ -233,16 +265,93 @@ jobs:
             exit 1
           fi
 
+          KPKG="$(find artifact \
+            -type f \
+            -name 'custom-screensaver_*_kindlehf.kpkg' \
+            -print \
+            -quit)"
+
+          if [ -z "$KPKG" ]; then
+            echo "Release KPM package not found"
+            exit 1
+          fi
+
+          REPOSITORY_MANIFEST="$(find artifact \
+            -type f \
+            -name 'kpm-repository.json' \
+            -print \
+            -quit)"
+
+          if [ -z "$REPOSITORY_MANIFEST" ]; then
+            echo "KPM repository manifest not found"
+            exit 1
+          fi
+
           echo "RELEASE_ZIP=$ZIP" >> "$GITHUB_ENV"
+          echo "RELEASE_KPKG=$KPKG" >> "$GITHUB_ENV"
+          echo "REPOSITORY_MANIFEST=$REPOSITORY_MANIFEST" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         run: |
           gh release create \
             "$GITHUB_REF_NAME" \
             "$RELEASE_ZIP" \
+            "$RELEASE_KPKG" \
+            "$REPOSITORY_MANIFEST" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Kindle Custom Screensaver ${GITHUB_REF_NAME}" \
             --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
             --verify-tag
         env:
           GH_TOKEN: ${{ github.token }}
+
+  pages:
+    name: Deploy KPM repository to GitHub Pages
+    needs: build
+    if: >-
+      github.event_name == 'push' &&
+      github.ref_type == 'tag' &&
+      needs.build.outputs.is_release == 'true'
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: custom-screensaver-kindlehf
+          path: artifact
+
+      - name: Prepare GitHub Pages content
+        run: |
+          REPOSITORY_MANIFEST="$(find artifact \
+            -type f \
+            -name 'kpm-repository.json' \
+            -print \
+            -quit)"
+
+          if [ -z "$REPOSITORY_MANIFEST" ]; then
+            echo "KPM repository manifest not found"
+            exit 1
+          fi
+
+          mkdir pages
+          cp "$REPOSITORY_MANIFEST" pages/kpm.json
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

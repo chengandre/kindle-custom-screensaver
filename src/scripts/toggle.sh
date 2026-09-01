@@ -177,18 +177,43 @@ enable_custom_ss() {
 
 #
 # -------------------------
-# Toggle
+# Command
 # -------------------------
 #
 
-if daemon_is_running; then
-    disable_custom_ss
-else
-    #
-    # Remove a stale PID file if the recorded process
-    # no longer exists.
-    #
-    rm -f "$PIDFILE"
+case "${1:-toggle}" in
+    disable)
+        if daemon_is_running; then
+            disable_custom_ss
+        else
+            rm -f "$PIDFILE"
 
-    enable_custom_ss
-fi
+            if [ -f "$SHIELD_PIDFILE" ] || \
+                [ -f "$STATEFILE" ] || \
+                [ -f "$INDEXFILE" ] || \
+                [ -p "$FIFO" ]
+            then
+                emergency_cleanup
+            fi
+        fi
+        ;;
+
+    toggle)
+        if daemon_is_running; then
+            disable_custom_ss
+        else
+            #
+            # Remove a stale PID file if the recorded process
+            # no longer exists.
+            #
+            rm -f "$PIDFILE"
+
+            enable_custom_ss
+        fi
+        ;;
+
+    *)
+        echo "Usage: $0 [disable]" >&2
+        exit 1
+        ;;
+esac
