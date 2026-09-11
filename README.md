@@ -1,6 +1,6 @@
 # Kindle Custom Screensaver
 
-A **lightweight custom screensaver** implementation for jailbroken Kindle devices.
+A **lightweight custom screensaver** implementation for jailbroken Kindle devices running firmware `>= 5.16.3`.
 
 It keeps the **normal Kindle reading experience** while adding custom sleep-screen images. It **does not require KOReader or KUAL**  , does not modify the Kindle system files, and does not start automatically at boot.
 
@@ -28,8 +28,7 @@ Both installation methods require:
 - a jailbroken Kindle
 - a `kindlehf`-compatible device
 
-KPM installation also requires Kindle Package Manager. Manual installation uses
-the `custom-screensaver-*-kindlehf.zip` release package.
+KPM installation also requires Kindle Package Manager. Manual installation uses the `custom-screensaver-*-kindlehf.zip` release package.
 
 ### Tested devices
 
@@ -37,6 +36,7 @@ The project has been confirmed to work on these devices and firmware versions:
 
 | Device                       | Model                 | Firmware           |
 | ---------------------------- | --------------------- | ------------------ |
+| Kindle 12th Gen              | Kindle 12             | 5.19.6             |
 | Kindle Paperwhite 11th Gen   | Paperwhite 5 / PW5    | 5.19.2             |
 | Kindle Paperwhite 12th Gen   | Paperwhite 6 / PW6    | 5.18.6, 5.19.5, 5.19.6 |
 
@@ -48,13 +48,16 @@ Other `kindlehf`-compatible devices may also work but have not yet been reported
 
 The project publishes its own KPM repository.
 
-In the Kindle search bar, add the repository and refresh KPM's package index:
+In the Kindle search bar, add the repository, verify that it was added, and refresh KPM's package index:
 
 ```text
 ;kpm add-repo https://kpm.andrecheng.com/kpm.json
 # or ;kpm add-repo https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json
+;kpm list-repo
 ;kpm update
 ```
+
+Confirm that the repository appears in `;kpm list-repo` before continuing. During testing, adding the repository from the Kindle search bar did not trigger any action on some devices, likely due to KPM behavior. If it does not appear, use the ZIP installation method or run the KPM commands over SSH.
 
 Install the package:
 
@@ -62,12 +65,9 @@ Install the package:
 ;kpm install custom-screensaver
 ```
 
-After installation, upload your PNG screensaver images to the Kindle's
-`/screensavers/` folder.
+After installation, upload your PNG screensaver images to the Kindle's `/screensavers/` folder.
 
-KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs
-the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates
-`/mnt/us/screensavers/` if needed.
+KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates `/mnt/us/screensavers/` if needed.
 
 To uninstall:
 
@@ -75,8 +75,7 @@ To uninstall:
 ;kpm uninstall custom-screensaver
 ```
 
-Uninstalling removes the runtime and package-owned Scriptlet but preserves
-`/mnt/us/screensavers/` and every image in it.
+Uninstalling removes the runtime and package-owned Scriptlet but preserves `/mnt/us/screensavers/` and every image in it.
 
 ---
 
@@ -293,8 +292,7 @@ If something goes wrong, simply reboot the Kindle.
 
 ## Special Offers / ad-supported devices
 
-Support for `ad_screensaver` has not yet been verified on a physical Special
-Offers Kindle.
+Support for `ad_screensaver` has not yet been verified on a physical Special Offers Kindle.
 
 ---
 
@@ -374,9 +372,7 @@ prototype/
 
 ## Status
 
-ZIP installation is confirmed on PW5 and PW6. KPM packaging and lifecycle
-support are implemented but still require physical-device validation. See
-[Tested devices](#tested-devices) for known firmware versions.
+ZIP and KPM installations have been tested on physical devices. See [Tested devices](#tested-devices) for known firmware versions.
 
 Next steps:
 
