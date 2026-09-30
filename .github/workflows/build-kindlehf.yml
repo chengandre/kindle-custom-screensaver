@@ -1,4 +1,4 @@
-name: Build KindleHF binaries
+name: Build Kindle binaries
 
 on:
   workflow_dispatch:
@@ -11,8 +11,21 @@ permissions:
 
 jobs:
   build:
-    name: Build native binaries for kindlehf
+    name: Build native binaries for ${{ matrix.target }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: kindlehf
+            triplet: arm-kindlehf-linux-gnueabihf
+            toolchain_sha256: d08d3a5cbbaa184cc0cc2279df1d64a71656ab2c1e0223cae324b8d30c8d73e0
+            fbink_name: fbink_hf
+          # Soft-float build for older firmware (e.g. Paperwhite 2 on 5.12.x).
+          - target: kindlepw2
+            triplet: arm-kindlepw2-linux-gnueabi
+            toolchain_sha256: ecefcab5ecdedc4e0255440d2aae36dda1efe36ef16bc6934c4633b2be5e69e5
+            fbink_name: fbink
     timeout-minutes: 90
     outputs:
       is_release: ${{ steps.version.outputs.is_release }}
@@ -54,20 +67,20 @@ jobs:
             ninja-build \
             pkg-config
 
-      - name: Install KindleHF toolchain
+      - name: Install ${{ matrix.target }} toolchain
         run: |
           wget \
-            -O "$RUNNER_TEMP/kindlehf.tar.gz" \
-            "https://github.com/KindleModding/koxtoolchain/releases/download/2026.04/kindlehf.tar.gz"
+            -O "$RUNNER_TEMP/${{ matrix.target }}.tar.gz" \
+            "https://github.com/KindleModding/koxtoolchain/releases/download/2026.04/${{ matrix.target }}.tar.gz"
 
           echo \
-            "d08d3a5cbbaa184cc0cc2279df1d64a71656ab2c1e0223cae324b8d30c8d73e0  $RUNNER_TEMP/kindlehf.tar.gz" \
+            "${{ matrix.toolchain_sha256 }}  $RUNNER_TEMP/${{ matrix.target }}.tar.gz" \
             | sha256sum -c -
 
-          tar -xzf "$RUNNER_TEMP/kindlehf.tar.gz" \
+          tar -xzf "$RUNNER_TEMP/${{ matrix.target }}.tar.gz" \
             -C "$HOME"
 
-          test -d "$HOME/x-tools/arm-kindlehf-linux-gnueabihf"
+          test -d "$HOME/x-tools/${{ matrix.triplet }}"
 
       - name: Clone Kindle SDK
         run: |
@@ -81,54 +94,55 @@ jobs:
         working-directory: ${{ runner.temp }}/kindle-sdk
         run: |
           chmod +x ./gen-sdk.sh
-          ./gen-sdk.sh kindlehf
+          ./gen-sdk.sh ${{ matrix.target }}
 
-      - name: Configure Meson for kindlehf
+      - name: Configure Meson for ${{ matrix.target }}
         run: |
-          CROSS_FILE="$HOME/x-tools/arm-kindlehf-linux-gnueabihf/meson-crosscompile.txt"
+          CROSS_FILE="$HOME/x-tools/${{ matrix.triplet }}/meson-crosscompile.txt"
 
           test -f "$CROSS_FILE"
 
           meson setup \
             --cross-file "$CROSS_FILE" \
-            build-kindlehf
+            build-${{ matrix.target }}
 
       - name: Compile
         run: |
-          meson compile -C build-kindlehf
+          meson compile -C build-${{ matrix.target }}
 
-      - name: Collect binary
+      - name: Collect binaries
         run: |
-          BINARY="$(find build-kindlehf \
-            -type f \
-            -name screensaver_shield \
-            -perm -111 \
-            -print \
-            -quit)"
+          for NAME in screensaver_shield cover_extract; do
+            BINARY="$(find build-${{ matrix.target }} \
+              -type f \
+              -name "$NAME" \
+              -perm -111 \
+              -print \
+              -quit)"
 
-          if [ -z "$BINARY" ]; then
-            echo "screensaver_shield was not produced"
-            exit 1
-          fi
+            if [ -z "$BINARY" ]; then
+              echo "$NAME was not produced"
+              exit 1
+            fi
 
-          cp "$BINARY" dist/screensaver_shield
+            cp "$BINARY" "dist/$NAME"
+          done
 
-      - name: Inspect binary
+      - name: Inspect binaries
         run: |
-          echo "=== file ==="
-          file dist/screensaver_shield
+          for NAME in screensaver_shield cover_extract; do
+            echo "=== $NAME: file ==="
+            file "dist/$NAME"
 
-          echo
-          echo "=== ELF header ==="
-          readelf -h dist/screensaver_shield
+            echo
+            echo "=== $NAME: interpreter ==="
+            readelf -l "dist/$NAME" | grep interpreter || true
 
-          echo
-          echo "=== interpreter ==="
-          readelf -l dist/screensaver_shield | grep interpreter || true
-
-          echo
-          echo "=== dynamic dependencies ==="
-          readelf -d dist/screensaver_shield | grep NEEDED || true
+            echo
+            echo "=== $NAME: dynamic dependencies ==="
+            readelf -d "dist/$NAME" | grep NEEDED || true
+            echo
+          done
 
       - name: Checkout FBInk
         run: |
@@ -142,9 +156,9 @@ jobs:
           git -C "$RUNNER_TEMP/FBInk" \
             submodule update --init --recursive
 
-      - name: Build FBInk for KindleHF
+      - name: Build FBInk for ${{ matrix.target }}
         run: |
-          TOOLCHAIN="$HOME/x-tools/arm-kindlehf-linux-gnueabihf/bin/arm-kindlehf-linux-gnueabihf"
+          TOOLCHAIN="$HOME/x-tools/${{ matrix.triplet }}/bin/${{ matrix.triplet }}"
 
           make -C "$RUNNER_TEMP/FBInk" distclean
 
@@ -156,32 +170,33 @@ jobs:
 
           cp \
             "$RUNNER_TEMP/FBInk/Release/fbink" \
-            dist/fbink_hf
+            dist/${{ matrix.fbink_name }}
 
       - name: Inspect FBInk binary
         run: |
           echo "=== file ==="
-          file dist/fbink_hf
+          file dist/${{ matrix.fbink_name }}
 
           echo
           echo "=== ELF header ==="
-          readelf -h dist/fbink_hf
+          readelf -h dist/${{ matrix.fbink_name }}
 
           echo
           echo "=== interpreter ==="
-          readelf -l dist/fbink_hf | grep interpreter || true
+          readelf -l dist/${{ matrix.fbink_name }} | grep interpreter || true
 
           echo
           echo "=== dynamic dependencies ==="
-          readelf -d dist/fbink_hf | grep NEEDED || true
+          readelf -d dist/${{ matrix.fbink_name }} | grep NEEDED || true
 
       - name: Record dependency revisions
         run: |
           {
+            echo "target=${{ matrix.target }}"
             echo "project_commit=${GITHUB_SHA}"
             echo "toolchain_repo=KindleModding/koxtoolchain"
             echo "toolchain_release=2026.04"
-            echo "toolchain_sha256=d08d3a5cbbaa184cc0cc2279df1d64a71656ab2c1e0223cae324b8d30c8d73e0"
+            echo "toolchain_sha256=${{ matrix.toolchain_sha256 }}"
             echo "kindle_sdk_commit=$(git -C "$RUNNER_TEMP/kindle-sdk" rev-parse HEAD)"
             echo "fbink_commit=$(git -C "$RUNNER_TEMP/FBInk" rev-parse HEAD)"
           } | tee dist/build-metadata.txt
@@ -207,27 +222,39 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Package release artifacts
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           ./scripts/package-zip.sh
-          ./scripts/package-kpm.sh
+
+          # KPM packages are published for kindlehf only.
+          if [ "$TARGET" = "kindlehf" ]; then
+            ./scripts/package-kpm.sh
+          fi
 
       - name: Validate release artifacts
         run: |
           unzip -t \
-            "release/custom-screensaver-${VERSION}-kindlehf.zip"
+            "release/custom-screensaver-${VERSION}-${{ matrix.target }}.zip"
+
+          if [ "${{ matrix.target }}" != "kindlehf" ]; then
+            exit 0
+          fi
 
           ./scripts/validate-kpm.sh \
             "release/custom-screensaver_${VERSION}_kindlehf.kpkg" \
             "$VERSION" \
             release/kpm-repository.json
 
-      - name: Upload KindleHF artifacts
+      - name: Upload ${{ matrix.target }} artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: custom-screensaver-kindlehf
+          name: custom-screensaver-${{ matrix.target }}
+          if-no-files-found: ignore
           path: |
             dist/screensaver_shield
-            dist/fbink_hf
+            dist/cover_extract
+            dist/${{ matrix.fbink_name }}
             dist/build-metadata.txt
             release/*.zip
             release/*.kpkg
@@ -249,7 +276,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: custom-screensaver-kindlehf
+          pattern: custom-screensaver-*
           path: artifact
 
       - name: Find release files
@@ -287,7 +314,19 @@ jobs:
             exit 1
           fi
 
+          PW2_ZIP="$(find artifact \
+            -type f \
+            -name 'custom-screensaver-*-kindlepw2.zip' \
+            -print \
+            -quit)"
+
+          if [ -z "$PW2_ZIP" ]; then
+            echo "kindlepw2 release ZIP not found"
+            exit 1
+          fi
+
           echo "RELEASE_ZIP=$ZIP" >> "$GITHUB_ENV"
+          echo "RELEASE_PW2_ZIP=$PW2_ZIP" >> "$GITHUB_ENV"
           echo "RELEASE_KPKG=$KPKG" >> "$GITHUB_ENV"
           echo "REPOSITORY_MANIFEST=$REPOSITORY_MANIFEST" >> "$GITHUB_ENV"
 
@@ -296,6 +335,7 @@ jobs:
           gh release create \
             "$GITHUB_REF_NAME" \
             "$RELEASE_ZIP" \
+            "$RELEASE_PW2_ZIP" \
             "$RELEASE_KPKG" \
             "$REPOSITORY_MANIFEST" \
             --repo "$GITHUB_REPOSITORY" \

@@ -1,5 +1,11 @@
 # Kindle Custom Screensaver
 
+> **Fork notes (dq-stack):** this fork adds two behaviours and an older-device build.
+>
+> - **Book cover in books:** when the Kindle sleeps while a book is open, the book's own cover is extracted from the file (MOBI / AZW / AZW3) and shown full-screen, centred without stretching. Books without an embedded cover, and other formats (KFX, PDF, …), fall back to a custom screensaver. Write `off` into `/screensavers/.cover_mode` to disable cover mode.
+> - **Random custom screensavers:** outside a book, a random PNG from `/screensavers/` is shown, never the same one twice in a row.
+> - **`kindlepw2` build:** a soft-float package (`custom-screensaver-<version>-kindlepw2.zip`) for older firmware such as the Paperwhite 2 on 5.12.x, installed with the ZIP method below. Firmware without `xrefresh` is handled by the shield's `--refresh` mode.
+
 A **lightweight custom screensaver** implementation for jailbroken Kindle devices running firmware `>= 5.16.3`.
 
 It keeps the **normal Kindle reading experience** while adding custom sleep-screen images. It **does not require KOReader or KUAL**  , does not modify the Kindle system files, and does not start automatically at boot.

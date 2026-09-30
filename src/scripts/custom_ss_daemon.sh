@@ -7,6 +7,13 @@ SS_DIR="/mnt/us/screensavers"
 FBINK="$BIN/fbink_hf"
 SHIELD="$BIN/screensaver_shield"
 
+# kindlepw2 (soft-float) builds ship bin/fbink instead of bin/fbink_hf.
+if [ ! -f "$FBINK" ]; then
+    FBINK="$BIN/fbink"
+fi
+
+TARGET="$(sed -n 's/^target=//p' "$BASE/build-metadata.txt" 2>/dev/null)"
+
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
 STATEFILE="/tmp/custom_ss_restore_renderers"
@@ -16,6 +23,7 @@ FIFO="/tmp/custom_ss_events.fifo"
 LOG="$BASE/custom_ss.log"
 
 . "$BASE/blanket_renderers.sh"
+. "$BASE/cover_lookup.sh"
 
 SLEEP_PID=""
 WAKE_PID=""
@@ -24,6 +32,15 @@ CLEANED=0
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"
+}
+
+
+#
+# Ask X clients to repaint the whole screen (what xrefresh does). Firmware
+# 5.12 ships without xrefresh, so the shield binary provides the same thing.
+#
+screen_refresh() {
+    DISPLAY=:0 "$SHIELD" --refresh >>"$LOG" 2>&1
 }
 
 
@@ -86,8 +103,9 @@ cleanup() {
 
     rm -f "$PIDFILE"
     rm -f "$INDEXFILE"
+    rm -f "$COVER_CACHE_PREFIX"*
 
-    DISPLAY=:0 xrefresh >>"$LOG" 2>&1
+    screen_refresh
 
     log "Cleanup complete"
 }
@@ -105,11 +123,17 @@ draw_screensaver() {
 
     LAST="$(cat "$INDEXFILE" 2>/dev/null)"
 
-    if [ -z "$LAST" ]; then
-        LAST="-1"
-    fi
+    #
+    # Pick a random image, avoiding an immediate repeat when there is
+    # more than one. BusyBox ash may lack $RANDOM, so read /dev/urandom.
+    #
+    RAND="$(od -An -N2 -tu2 /dev/urandom | tr -d ' ')"
 
-    NEXT=$(( (LAST + 1) % COUNT ))
+    if [ "$COUNT" -gt 1 ] && [ -n "$LAST" ]; then
+        NEXT=$(( (LAST + 1 + RAND % (COUNT - 1)) % COUNT ))
+    else
+        NEXT=$(( RAND % COUNT ))
+    fi
 
     echo "$NEXT" > "$INDEXFILE"
 
@@ -132,6 +156,24 @@ draw_screensaver() {
 }
 
 
+draw_cover() {
+    log "Drawing cover: $1"
+
+    "$FBINK" \
+        -c -f -W GC16 \
+        -g file="$1",w=-2,h=-2,halign=CENTER,valign=CENTER,dither >>"$LOG" 2>&1
+
+    RESULT=$?
+
+    if [ "$RESULT" -ne 0 ]; then
+        log "ERROR: FBInk returned $RESULT for cover"
+        return "$RESULT"
+    fi
+
+    return 0
+}
+
+
 #
 # ----- startup validation -----
 #
@@ -139,13 +181,19 @@ draw_screensaver() {
 echo "" >> "$LOG"
 log "=== Custom screensaver starting ==="
 
-if [ ! -f /lib/ld-linux-armhf.so.3 ]; then
-    log "ERROR: hard-float loader not found"
+if [ "$TARGET" = "kindlepw2" ]; then
+    LOADER="/lib/ld-linux.so.3"
+else
+    LOADER="/lib/ld-linux-armhf.so.3"
+fi
+
+if [ ! -f "$LOADER" ]; then
+    log "ERROR: loader $LOADER not found (build target: ${TARGET:-kindlehf})"
     exit 1
 fi
 
 if [ ! -f "$FBINK" ]; then
-    log "ERROR: fbink_hf missing"
+    log "ERROR: fbink missing"
     exit 1
 fi
 
@@ -159,7 +207,7 @@ if ! ls "$SS_DIR"/*.png >/dev/null 2>&1; then
     exit 1
 fi
 
-chmod +x "$FBINK" "$SHIELD"
+chmod +x "$FBINK" "$SHIELD" "$COVER_EXTRACT" 2>/dev/null
 
 echo $$ > "$PIDFILE"
 
@@ -231,7 +279,12 @@ while read -r LINE <&3; do
 
             shield_up
 
-            if draw_screensaver; then
+            if cover_mode_enabled && in_book &&
+                COVER="$(current_cover_path)" &&
+                draw_cover "$COVER"
+            then
+                log "Book cover drawn"
+            elif draw_screensaver; then
                 log "Custom screensaver drawn"
             else
                 log "Drawing failed - shutting daemon down"
@@ -248,8 +301,7 @@ while read -r LINE <&3; do
             "$FBINK" \
                 -k -f -W GC16 >>"$LOG" 2>&1
 
-            DISPLAY=:0 \
-                xrefresh >>"$LOG" 2>&1
+            screen_refresh
 
             log "Wake refresh complete"
 

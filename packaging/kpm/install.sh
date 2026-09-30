@@ -59,6 +59,7 @@ chmod +x \
     "$NEW_APP/custom_ss_daemon.sh" \
     "$NEW_APP/toggle.sh" \
     "$NEW_APP/bin/screensaver_shield" \
+    "$NEW_APP/bin/cover_extract" \
     "$NEW_APP/bin/fbink_hf" \
     "$NEW_SCRIPTLET"
 

@@ -51,7 +51,9 @@ for path in \
     payload/runtime/custom_ss_daemon.sh \
     payload/runtime/toggle.sh \
     payload/runtime/blanket_renderers.sh \
+    payload/runtime/cover_lookup.sh \
     payload/runtime/bin/screensaver_shield \
+    payload/runtime/bin/cover_extract \
     payload/runtime/bin/fbink_hf \
     payload/runtime/build-metadata.txt \
     payload/runtime/LICENSE \

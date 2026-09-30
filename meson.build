@@ -9,3 +9,4 @@ project(
 )
 
 subdir('src/shield')
+subdir('src/cover_extract')

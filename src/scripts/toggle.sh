@@ -86,7 +86,7 @@ emergency_cleanup() {
         rm -f "$STATEFILE"
     fi
 
-    DISPLAY=:0 xrefresh >>"$LOG" 2>&1
+    DISPLAY=:0 "$BASE/bin/screensaver_shield" --refresh >>"$LOG" 2>&1
 
     return "$EMERGENCY_RESULT"
 }

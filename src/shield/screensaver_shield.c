@@ -6,6 +6,10 @@
  *
  * The window uses override_redirect so the Kindle window manager
  * does not manage or reposition it.
+ *
+ * With --refresh it instead maps and immediately unmaps the window, which
+ * makes every client underneath repaint (the same trick as xrefresh, which
+ * older firmware does not ship).
  */
 
 #define _POSIX_C_SOURCE 200809L
@@ -15,6 +19,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static volatile sig_atomic_t running = 1;
@@ -45,12 +50,13 @@ static int install_signal_handlers(void)
     return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
     Display *display;
     Window root;
     Window window;
 
+    int refresh_only = argc > 1 && strcmp(argv[1], "--refresh") == 0;
     int screen;
     unsigned int width;
     unsigned int height;
@@ -128,6 +134,17 @@ int main(void)
      * Wait until the X server has processed everything above.
      */
     XSync(display, False);
+
+    if (refresh_only) {
+        XUnmapWindow(display, window);
+        XDestroyWindow(display, window);
+        XSync(display, False);
+        XCloseDisplay(display);
+
+        fprintf(stderr, "screensaver_shield: refresh requested\n");
+
+        return EXIT_SUCCESS;
+    }
 
     fprintf(stderr,
             "screensaver_shield: active, window=0x%lx\n",
