@@ -3,7 +3,7 @@
   "id": "custom-screensaver",
   "name": "Kindle Custom Screensaver",
   "author": "Andre Cheng",
-  "description": "Custom PNG sleep-screen images while retaining the stock Kindle reading interface.",
+  "description": "Custom PNG and JPEG sleep-screen images while retaining the stock Kindle reading interface.",
   "version": [
     @VERSION_MAJOR@,
     @VERSION_MINOR@,

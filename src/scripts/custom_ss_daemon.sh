@@ -93,11 +93,24 @@ cleanup() {
 }
 
 
+list_screensaver_images() {
+    for IMAGE in "$SS_DIR"/*; do
+        [ -f "$IMAGE" ] || continue
+
+        case "$IMAGE" in
+            *.[pP][nN][gG]|*.[jJ][pP][gG]|*.[jJ][pP][eE][gG])
+                printf '%s\n' "$IMAGE"
+                ;;
+        esac
+    done
+}
+
+
 draw_screensaver() {
-    IMAGES="$(ls "$SS_DIR"/*.png 2>/dev/null)"
+    IMAGES="$(list_screensaver_images)"
 
     if [ -z "$IMAGES" ]; then
-        log "ERROR: no *.png files"
+        log "ERROR: no PNG or JPEG files"
         return 1
     fi
 
@@ -154,8 +167,8 @@ if [ ! -f "$SHIELD" ]; then
     exit 1
 fi
 
-if ! ls "$SS_DIR"/*.png >/dev/null 2>&1; then
-    log "ERROR: no screensaver images"
+if [ -z "$(list_screensaver_images)" ]; then
+    log "ERROR: no PNG or JPEG screensaver images"
     exit 1
 fi
 

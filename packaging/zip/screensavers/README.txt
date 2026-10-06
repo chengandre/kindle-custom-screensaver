@@ -1,1 +1,2 @@
-Place your custom screensaver PNG files in this folder.
+Place your custom screensaver PNG or JPEG files in this folder.
+Supported extensions: .png, .jpg, and .jpeg (case-insensitive).

@@ -8,7 +8,7 @@ It keeps the **normal Kindle reading experience** while adding custom sleep-scre
 
 ## Features
 
-- Displays custom PNG images when the Kindle goes to sleep
+- Displays custom PNG and JPEG images when the Kindle goes to sleep
 - Supports multiple images and rotates between them
 - Scales images to fill the display
 - Works with the stock Kindle reading interface
@@ -65,7 +65,7 @@ Install the package:
 ;kpm install custom-screensaver
 ```
 
-After installation, upload your PNG screensaver images to the Kindle's `/screensavers/` folder.
+After installation, upload your PNG or JPEG screensaver images to the Kindle's `/screensavers/` folder.
 
 KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates `/mnt/us/screensavers/` if needed.
 
@@ -168,7 +168,7 @@ After copying, the relevant files on the Kindle should be:
 
 ### 5. Add custom screensavers
 
-Place PNG files in:
+Place PNG or JPEG files in:
 
 ```text
 /screensavers/
@@ -178,11 +178,11 @@ Example:
 
 ```text
 /screensavers/artwork.png
-/screensavers/landscape.png
-/screensavers/manga-panel.png
+/screensavers/landscape.jpg
+/screensavers/photo.jpeg
 ```
 
-- Any PNG filename is supported
+- Supported extensions: `.png`, `.jpg`, and `.jpeg` (case-insensitive)
 - Images are rotated in filename order
 - Images are automatically scaled to fit the screen
 
@@ -257,7 +257,7 @@ sleep event
    ↓
 screensaver_shield
    ↓
-FBInk renders PNG to framebuffer
+FBInk renders the image to framebuffer
    ↓
 Kindle enters sleep
 ```
