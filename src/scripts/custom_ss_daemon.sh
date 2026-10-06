@@ -260,9 +260,16 @@ while read -r LINE <&3; do
             ;;
 
 
-        # PIN validation delays outOfScreenSaver; release the shield before
-        # the stock PIN dialog needs to draw and receive input.
-        *goingToPasswdDlg*|*outOfScreenSaver*)
+        # The managed screensaver shield stays behind the stock PIN dialog.
+        # Unmapping it here would expose and repaint the book or menu.
+        *goingToPasswdDlg*)
+
+            log "PIN dialog requested; keeping screensaver behind dialog"
+
+            ;;
+
+
+        *outOfScreenSaver*)
 
             shield_down
 

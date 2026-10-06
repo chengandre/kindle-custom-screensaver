@@ -4,14 +4,16 @@
  * Fullscreen X11 shield used while a custom Kindle sleep image
  * is displayed directly through the framebuffer.
  *
- * The window uses override_redirect so the Kindle window manager
- * does not manage or reposition it.
+ * The window uses the stock screensaver layer so the Kindle window
+ * manager can place its PIN dialog above the custom sleep image.
  */
 
 #define _POSIX_C_SOURCE 200809L
 
 #include <X11/Xlib.h>
 
+#include <errno.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,7 +88,8 @@ int main(void)
             width,
             height);
 
-    attributes.override_redirect = True;
+    attributes.override_redirect = False;
+    attributes.event_mask = StructureNotifyMask;
 
     /*
      * No background pixmap means X should not paint a background
@@ -95,7 +98,7 @@ int main(void)
      */
     attributes.background_pixmap = None;
 
-    attribute_mask = CWOverrideRedirect | CWBackPixmap;
+    attribute_mask = CWOverrideRedirect | CWBackPixmap | CWEventMask;
 
     window = XCreateWindow(
         display,
@@ -119,15 +122,33 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    XStoreName(display, window, "Kindle Custom Screensaver Shield");
+    /* Match the stock screensaver role; passwdlg uses L:SS_N:dialog. */
+    XStoreName(display, window,
+               "L:SS_N:screenSaver_ID:custom-screensaver");
 
-    XMapRaised(display, window);
-    XRaiseWindow(display, window);
+    XMapWindow(display, window);
+    XFlush(display);
 
-    /*
-     * Wait until the X server has processed everything above.
-     */
-    XSync(display, False);
+    /* Mapping is asynchronous when the window manager owns the window. */
+    XEvent event;
+    struct pollfd x_connection = {
+        .fd = ConnectionNumber(display),
+        .events = POLLIN,
+    };
+
+    while (running && !XCheckTypedWindowEvent(display, window, MapNotify, &event)) {
+        int result = poll(&x_connection, 1, 5000);
+
+        if (result < 0 && errno == EINTR)
+            continue;
+
+        if (result <= 0 || (x_connection.revents & (POLLERR | POLLHUP | POLLNVAL))) {
+            fprintf(stderr, "screensaver_shield: window manager did not map window\n");
+            XDestroyWindow(display, window);
+            XCloseDisplay(display);
+            return EXIT_FAILURE;
+        }
+    }
 
     fprintf(stderr,
             "screensaver_shield: active, window=0x%lx\n",
