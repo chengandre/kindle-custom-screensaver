@@ -199,6 +199,8 @@ This Scriptlet behaves like opening a book:
 - First run → enables the custom screensaver
 - Second run → disables it and restores stock behavior
 
+A large, centered status message appears for three seconds after enabling or disabling. If there are no supported images, the message asks you to add PNG or JPG images to `/screensavers/` and try again.
+
 To test:
 
 - Put the Kindle to sleep after enabling

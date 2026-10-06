@@ -4,6 +4,8 @@
 
 BASE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 DAEMON="$BASE/custom_ss_daemon.sh"
+FBINK="$BASE/bin/fbink_hf"
+SS_DIR="/mnt/us/screensavers"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
@@ -18,6 +20,22 @@ LOG="$BASE/launcher.log"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG"
+}
+
+
+show_status() {
+    if ! chmod +x "$FBINK" >>"$LOG" 2>&1 ||
+        ! "$FBINK" -p -m -M -S 5 -w "$1" >>"$LOG" 2>&1
+    then
+        log "ERROR: could not display status message"
+        return 0
+    fi
+
+    sleep 3
+
+    if ! DISPLAY=:0 xrefresh >>"$LOG" 2>&1; then
+        log "ERROR: could not repaint Kindle interface after status message"
+    fi
 }
 
 
@@ -133,6 +151,9 @@ disable_custom_ss() {
 enable_custom_ss() {
     if [ ! -f "$DAEMON" ]; then
         log "ERROR: daemon missing: $DAEMON"
+        show_status "Could not enable
+custom screensaver.
+See logs."
         exit 1
     fi
 
@@ -141,6 +162,24 @@ enable_custom_ss() {
     #
     if ! emergency_cleanup; then
         log "ERROR: cannot enable while renderer restoration is incomplete"
+        show_status "Could not enable
+custom screensaver.
+See logs."
+        exit 1
+    fi
+
+    HAS_IMAGES=0
+    for IMAGE in "$SS_DIR"/*.[pP][nN][gG] "$SS_DIR"/*.[jJ][pP][gG] "$SS_DIR"/*.[jJ][pP][eE][gG]; do
+        if [ -f "$IMAGE" ]; then
+            HAS_IMAGES=1
+            break
+        fi
+    done
+
+    if [ "$HAS_IMAGES" -eq 0 ]; then
+        log "ERROR: no PNG or JPEG screensaver images"
+        show_status "Add PNG or JPG images
+to /screensavers/"
         exit 1
     fi
 
@@ -162,6 +201,8 @@ enable_custom_ss() {
 
         if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
             log "Custom screensaver ENABLED (PID $PID)"
+            show_status "Custom screensaver
+turned on"
             exit 0
         fi
     fi
@@ -170,6 +211,9 @@ enable_custom_ss() {
 
     kill "$NEWPID" 2>/dev/null
     emergency_cleanup
+    show_status "Could not enable
+custom screensaver.
+See logs."
 
     exit 1
 }
@@ -200,7 +244,15 @@ case "${1:-toggle}" in
 
     toggle)
         if daemon_is_running; then
-            disable_custom_ss
+            if disable_custom_ss; then
+                show_status "Custom screensaver
+turned off"
+            else
+                show_status "Could not disable
+custom screensaver.
+See logs."
+                exit 1
+            fi
         else
             #
             # Remove a stale PID file if the recorded process
