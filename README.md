@@ -184,6 +184,7 @@ Example:
 
 - Supported extensions: `.png`, `.jpg`, and `.jpeg` (case-insensitive)
 - Images are rotated in filename order
+- Images that fail to render are skipped. If all images fail, the daemon stops and attempts to restore stock screensavers.
 - Images are automatically scaled to fit the screen
 
 ---

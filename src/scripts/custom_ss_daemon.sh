@@ -123,25 +123,31 @@ draw_screensaver() {
     fi
 
     NEXT=$(( (LAST + 1) % COUNT ))
+    ATTEMPTS=0
 
-    echo "$NEXT" > "$INDEXFILE"
+    while [ "$ATTEMPTS" -lt "$COUNT" ]; do
+        IMG="$(echo "$IMAGES" | sed -n "$((NEXT + 1))p")"
 
-    IMG="$(echo "$IMAGES" | sed -n "$((NEXT + 1))p")"
+        log "Drawing: $IMG"
 
-    log "Drawing: $IMG"
+        "$FBINK" \
+            -g file="$IMG",w=-1,h=-1 \
+            -f >>"$LOG" 2>&1
 
-    "$FBINK" \
-        -g file="$IMG",w=-1,h=-1 \
-        -f >>"$LOG" 2>&1
+        RESULT=$?
 
-    RESULT=$?
+        if [ "$RESULT" -eq 0 ]; then
+            echo "$NEXT" > "$INDEXFILE"
+            return 0
+        fi
 
-    if [ "$RESULT" -ne 0 ]; then
-        log "ERROR: FBInk returned $RESULT"
-        return "$RESULT"
-    fi
+        log "ERROR: skipping $IMG; FBInk returned $RESULT"
+        NEXT=$(( (NEXT + 1) % COUNT ))
+        ATTEMPTS=$((ATTEMPTS + 1))
+    done
 
-    return 0
+    log "ERROR: all $COUNT screensaver images failed to render"
+    return 1
 }
 
 
