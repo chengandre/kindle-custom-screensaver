@@ -25,13 +25,13 @@ log() {
 
 show_status() {
     if ! chmod +x "$FBINK" >>"$LOG" 2>&1 ||
-        ! "$FBINK" -p -m -M -S 5 -w "$1" >>"$LOG" 2>&1
+        ! "$FBINK" -p -m -M -S 5 -B WHITE -C BLACK -w "$1" >>"$LOG" 2>&1
     then
         log "ERROR: could not display status message"
         return 0
     fi
 
-    sleep 3
+    sleep 2
 
     if ! DISPLAY=:0 xrefresh >>"$LOG" 2>&1; then
         log "ERROR: could not repaint Kindle interface after status message"
