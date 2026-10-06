@@ -279,6 +279,10 @@ framebuffer restored
 Kindle UI resumes
 ```
 
+With a device PIN enabled, the daemon releases the shield on
+`goingToPasswdDlg` so the stock PIN dialog can appear. Kindle emits
+`outOfScreenSaver` only after the PIN is validated.
+
 ---
 
 ## Safety and recovery

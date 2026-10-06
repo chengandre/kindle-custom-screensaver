@@ -221,7 +221,7 @@ SLEEP_PID=$!
 
 lipc-wait-event \
     -m com.lab126.powerd \
-    outOfScreenSaver >&3 2>>"$LOG" &
+    outOfScreenSaver,goingToPasswdDlg >&3 2>>"$LOG" &
 WAKE_PID=$!
 
 #
@@ -260,7 +260,9 @@ while read -r LINE <&3; do
             ;;
 
 
-        *outOfScreenSaver*)
+        # PIN validation delays outOfScreenSaver; release the shield before
+        # the stock PIN dialog needs to draw and receive input.
+        *goingToPasswdDlg*|*outOfScreenSaver*)
 
             shield_down
 
