@@ -260,9 +260,17 @@ while read -r LINE <&3; do
             ;;
 
 
-        # The managed screensaver shield stays behind the stock PIN dialog.
-        # Unmapping it here would expose and repaint the book or menu.
+        # Start watching PIN-window stacking only when unlocking begins.
+        # Unmapping the shield here would expose the book or menu.
         *goingToPasswdDlg*)
+
+            if [ -f "$SHIELD_PIDFILE" ]; then
+                SPID="$(cat "$SHIELD_PIDFILE" 2>/dev/null)"
+
+                if ! kill -USR1 "$SPID" 2>>"$LOG"; then
+                    log "ERROR: could not notify shield of PIN entry"
+                fi
+            fi
 
             log "PIN dialog requested; keeping screensaver behind dialog"
 
