@@ -307,7 +307,7 @@ jobs:
 
   pages:
     name: Deploy KPM repository to GitHub Pages
-    needs: build
+    needs: [build, release]
     if: >-
       github.event_name == 'push' &&
       github.ref_type == 'tag' &&
