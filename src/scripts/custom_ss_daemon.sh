@@ -131,7 +131,7 @@ draw_screensaver() {
         log "Drawing: $IMG"
 
         "$FBINK" \
-            -g file="$IMG",w=-1,h=-1 \
+            -i "$IMG" -g w=-1,h=-1 \
             -f >>"$LOG" 2>&1
 
         RESULT=$?
