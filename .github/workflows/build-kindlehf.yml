@@ -115,23 +115,6 @@ jobs:
 
           cp "$BINARY" dist/screensaver_shield
 
-      - name: Inspect binary
-        run: |
-          echo "=== file ==="
-          file dist/screensaver_shield
-
-          echo
-          echo "=== ELF header ==="
-          readelf -h dist/screensaver_shield
-
-          echo
-          echo "=== interpreter ==="
-          readelf -l dist/screensaver_shield | grep interpreter || true
-
-          echo
-          echo "=== dynamic dependencies ==="
-          readelf -d dist/screensaver_shield | grep NEEDED || true
-
       - name: Checkout FBInk
         run: |
           git clone \
@@ -160,22 +143,41 @@ jobs:
             "$RUNNER_TEMP/FBInk/Release/fbink" \
             dist/fbink_hf
 
-      - name: Inspect FBInk binary
+      # FBInk's build above also produces Release/libfbink.a.
+      - name: Build screensaver_draw
         run: |
-          echo "=== file ==="
-          file dist/fbink_hf
+          TOOLCHAIN="$HOME/x-tools/arm-kindlehf-linux-gnueabihf/bin/arm-kindlehf-linux-gnueabihf"
 
-          echo
-          echo "=== ELF header ==="
-          readelf -h dist/fbink_hf
+          "$TOOLCHAIN-gcc" \
+            -std=c11 -O2 -Wall -Wextra \
+            -I"$RUNNER_TEMP/FBInk" \
+            src/draw/screensaver_draw.c \
+            "$RUNNER_TEMP/FBInk/Release/libfbink.a" \
+            -lm \
+            -o dist/screensaver_draw
 
-          echo
-          echo "=== interpreter ==="
-          readelf -l dist/fbink_hf | grep interpreter || true
+      - name: Inspect binaries
+        run: |
+          for BINARY in dist/screensaver_shield dist/screensaver_draw dist/fbink_hf; do
+            echo "##### $BINARY #####"
 
-          echo
-          echo "=== dynamic dependencies ==="
-          readelf -d dist/fbink_hf | grep NEEDED || true
+            echo "=== file ==="
+            file "$BINARY"
+
+            echo
+            echo "=== ELF header ==="
+            readelf -h "$BINARY"
+
+            echo
+            echo "=== interpreter ==="
+            readelf -l "$BINARY" | grep interpreter || true
+
+            echo
+            echo "=== dynamic dependencies ==="
+            readelf -d "$BINARY" | grep NEEDED || true
+
+            echo
+          done
 
       - name: Record dependency revisions
         run: |
@@ -229,6 +231,7 @@ jobs:
           name: custom-screensaver-kindlehf
           path: |
             dist/screensaver_shield
+            dist/screensaver_draw
             dist/fbink_hf
             dist/build-metadata.txt
             release/*.zip
