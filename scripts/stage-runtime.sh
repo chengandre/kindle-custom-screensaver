@@ -12,6 +12,7 @@ DIST="$ROOT/dist"
 
 for file in \
     "$DIST/screensaver_shield" \
+    "$DIST/screensaver_draw" \
     "$DIST/fbink_hf" \
     "$DIST/build-metadata.txt" \
     "$ROOT/LICENSE"
@@ -33,6 +34,7 @@ cp "$ROOT/THIRD_PARTY_NOTICES.md" "$DESTINATION/THIRD_PARTY_NOTICES.md"
 cp "$ROOT/licenses/FBInk/LICENSE" "$DESTINATION/licenses/FBInk/LICENSE"
 cp "$ROOT/licenses/FBInk/CREDITS" "$DESTINATION/licenses/FBInk/CREDITS"
 cp "$DIST/screensaver_shield" "$DESTINATION/bin/screensaver_shield"
+cp "$DIST/screensaver_draw" "$DESTINATION/bin/screensaver_draw"
 cp "$DIST/fbink_hf" "$DESTINATION/bin/fbink_hf"
 cp "$DIST/build-metadata.txt" "$DESTINATION/build-metadata.txt"
 cp "$ROOT/LICENSE" "$DESTINATION/LICENSE"
@@ -41,4 +43,5 @@ chmod +x \
     "$DESTINATION/custom_ss_daemon.sh" \
     "$DESTINATION/toggle.sh" \
     "$DESTINATION/bin/screensaver_shield" \
+    "$DESTINATION/bin/screensaver_draw" \
     "$DESTINATION/bin/fbink_hf"

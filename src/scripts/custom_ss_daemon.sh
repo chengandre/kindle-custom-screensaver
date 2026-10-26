@@ -6,6 +6,7 @@ SS_DIR="/mnt/us/screensavers"
 
 FBINK="$BIN/fbink_hf"
 SHIELD="$BIN/screensaver_shield"
+DRAW="$BIN/screensaver_draw"
 
 PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
@@ -130,9 +131,7 @@ draw_screensaver() {
 
         log "Drawing: $IMG"
 
-        "$FBINK" \
-            -i "$IMG" -g w=-1,h=-1 \
-            -f >>"$LOG" 2>&1
+        "$DRAW" "$IMG" >>"$LOG" 2>&1
 
         RESULT=$?
 
@@ -141,7 +140,7 @@ draw_screensaver() {
             return 0
         fi
 
-        log "ERROR: skipping $IMG; FBInk returned $RESULT"
+        log "ERROR: skipping $IMG; screensaver_draw returned $RESULT"
         NEXT=$(( (NEXT + 1) % COUNT ))
         ATTEMPTS=$((ATTEMPTS + 1))
     done
@@ -173,12 +172,17 @@ if [ ! -f "$SHIELD" ]; then
     exit 1
 fi
 
+if [ ! -f "$DRAW" ]; then
+    log "ERROR: screensaver_draw missing"
+    exit 1
+fi
+
 if [ -z "$(list_screensaver_images)" ]; then
     log "ERROR: no PNG or JPEG screensaver images"
     exit 1
 fi
 
-chmod +x "$FBINK" "$SHIELD"
+chmod +x "$FBINK" "$SHIELD" "$DRAW"
 
 echo $$ > "$PIDFILE"
 

@@ -112,6 +112,7 @@ extensions/
     ├── THIRD_PARTY_NOTICES.md
     ├── bin/
     │   ├── screensaver_shield
+    │   ├── screensaver_draw
     │   └── fbink_hf
     └── licenses/
         └── FBInk/
@@ -157,6 +158,7 @@ After copying, the relevant files on the Kindle should be:
 │       ├── THIRD_PARTY_NOTICES.md
 │       ├── bin/
 │       │   ├── screensaver_shield
+│       │   ├── screensaver_draw
 │       │   └── fbink_hf
 │       └── licenses/
 │           └── FBInk/
@@ -188,6 +190,7 @@ Example:
 - Images are rotated in filename order
 - Images that fail to render are skipped. If all images fail, the daemon stops and attempts to restore stock screensavers.
 - Images are automatically scaled to fit the screen
+- Images are always shown in portrait, even if the Kindle was in landscape when it went to sleep
 
 ---
 
@@ -262,7 +265,8 @@ sleep event
    ↓
 screensaver_shield
    ↓
-FBInk renders the image to framebuffer
+screensaver_draw renders the image to framebuffer
+(rotated 90° if the framebuffer is in landscape)
    ↓
 Kindle enters sleep
 ```
@@ -305,9 +309,10 @@ Support for `ad_screensaver` has not yet been verified on a physical Special Off
 
 ## Native binaries
 
-Two ARM hard-float binaries are used:
+Three ARM hard-float binaries are used:
 
 - `screensaver_shield` (this project)
+- `screensaver_draw` (this project, statically linked against FBInk)
 - `fbink_hf` (built from upstream FBInk)
 
 Build metadata is stored in:
@@ -353,6 +358,8 @@ This project avoids that stack entirely and focuses on a minimal, standalone app
 src/
 ├── shield/
 │   └── screensaver_shield.c
+├── draw/
+│   └── screensaver_draw.c
 └── scripts/
     ├── blanket_renderers.sh
     ├── custom_ss_daemon.sh

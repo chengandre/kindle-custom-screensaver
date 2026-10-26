@@ -10,6 +10,8 @@ Repository: https://github.com/NiLuJe/FBInk
 
 This project builds and distributes the `fbink_hf` executable from a pinned FBInk revision.
 
+The `screensaver_draw` executable is statically linked against FBInk and is therefore distributed under the GNU General Public License version 3 or later.
+
 The exact revision commit hash used for each build is recorded in `build-metadata.txt`.
 
 FBInk is distributed under the GNU General Public License version 3 or later.

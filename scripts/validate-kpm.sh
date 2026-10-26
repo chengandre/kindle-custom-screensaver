@@ -52,6 +52,7 @@ for path in \
     payload/runtime/toggle.sh \
     payload/runtime/blanket_renderers.sh \
     payload/runtime/bin/screensaver_shield \
+    payload/runtime/bin/screensaver_draw \
     payload/runtime/bin/fbink_hf \
     payload/runtime/build-metadata.txt \
     payload/runtime/LICENSE \
@@ -71,6 +72,7 @@ for path in \
     payload/runtime/custom_ss_daemon.sh \
     payload/runtime/toggle.sh \
     payload/runtime/bin/screensaver_shield \
+    payload/runtime/bin/screensaver_draw \
     payload/runtime/bin/fbink_hf
 do
     if [ ! -x "$PACKAGE_CONTENTS/$path" ]; then
