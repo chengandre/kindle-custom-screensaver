@@ -59,9 +59,34 @@ In the Kindle search bar, add the repository, verify that it was added, and refr
 ;kpm update
 ```
 
-Confirm that the repository appears in `;kpm list-repo` before continuing. During testing, adding the repository from the Kindle search bar did not trigger any action on some devices, likely due to KPM behavior. If it does not appear, use the ZIP installation method or run the KPM commands over SSH.
+Confirm that the repository appears in `;kpm list-repo` before continuing. On some devices, adding the repository from the Kindle search bar does nothing, likely due to KPM behavior. If it does not appear, add it from kterm as described below, use the ZIP installation method, or run the KPM commands over SSH.
 
-Install the package:
+### If `;kpm add-repo` does nothing
+
+Install kterm through KPM from the Kindle search bar:
+
+```text
+;kpm update
+;kpm install kterm
+```
+
+A **kterm** book appears in the library after a few seconds. Open it, then add the repository by running KPM directly:
+
+```sh
+/var/local/kmc/bin/kpm add-repo https://kpm.andrecheng.com/kpm.json
+exit
+```
+
+Back in the Kindle search bar, confirm that `https://kpm.andrecheng.com/kpm.json` appears in the list, then refresh the package index:
+
+```text
+;kpm list-repo
+;kpm update
+```
+
+### Install the package
+
+In the Kindle search bar:
 
 ```text
 ;kpm install custom-screensaver
