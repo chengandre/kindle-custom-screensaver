@@ -200,12 +200,13 @@ Safely eject the Kindle.
 
 Then open the **Custom Screensaver Scriptlet** from your Kindle library.
 
-This Scriptlet behaves like opening a book:
+This Scriptlet behaves like opening a book. Each run advances to the next mode:
 
-- First run → enables the custom screensaver
-- Second run → disables it and restores stock behavior
+- First run → enables the custom screensaver in shuffle mode (a random image each time, never the same one twice in a row)
+- Second run → switches to sequential mode (images in filename order)
+- Third run → disables it and restores stock behavior
 
-A large, centered status message appears for two seconds after enabling or disabling. If there are no supported images, the message asks you to add PNG or JPG images to `/screensavers/` and try again.
+A large, centered status message appears for two seconds after each change. If there are no supported images, the message asks you to add PNG or JPG images to `/screensavers/` and try again.
 
 To test:
 

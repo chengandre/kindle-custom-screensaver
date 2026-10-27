@@ -11,6 +11,7 @@ PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
 STATEFILE="/tmp/custom_ss_restore_renderers"
 INDEXFILE="/tmp/custom_ss_last"
+MODEFILE="/tmp/custom_ss_mode"
 FIFO="/tmp/custom_ss_events.fifo"
 
 LOG="$BASE/launcher.log"
@@ -98,6 +99,7 @@ emergency_cleanup() {
     rm -f \
         "$PIDFILE" \
         "$INDEXFILE" \
+        "$MODEFILE" \
         "$FIFO"
 
     if [ "$EMERGENCY_RESULT" -eq 0 ]; then
@@ -185,6 +187,8 @@ to /screensavers/"
 
     chmod +x "$DAEMON"
 
+    echo shuffle > "$MODEFILE"
+
     log "Enabling custom screensaver"
 
     sh "$DAEMON" >/dev/null 2>&1 &
@@ -200,9 +204,9 @@ to /screensavers/"
         PID="$(cat "$PIDFILE" 2>/dev/null)"
 
         if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
-            log "Custom screensaver ENABLED (PID $PID)"
+            log "Custom screensaver ENABLED in shuffle mode (PID $PID)"
             show_status "Custom screensaver
-turned on"
+turned on (shuffle)"
             exit 0
         fi
     fi
@@ -235,6 +239,7 @@ case "${1:-toggle}" in
             if [ -f "$SHIELD_PIDFILE" ] || \
                 [ -f "$STATEFILE" ] || \
                 [ -f "$INDEXFILE" ] || \
+                [ -f "$MODEFILE" ] || \
                 [ -p "$FIFO" ]
             then
                 emergency_cleanup
@@ -242,9 +247,19 @@ case "${1:-toggle}" in
         fi
         ;;
 
+    #
+    # Each run advances one step: off -> shuffle -> sequential -> off.
+    # The daemon reads the mode file on every draw, so switching from
+    # shuffle to sequential needs no restart.
+    #
     toggle)
         if daemon_is_running; then
-            if disable_custom_ss; then
+            if [ "$(cat "$MODEFILE" 2>/dev/null)" = "shuffle" ]; then
+                echo sequential > "$MODEFILE"
+                log "Custom screensaver switched to sequential mode"
+                show_status "Custom screensaver
+sequential order"
+            elif disable_custom_ss; then
                 show_status "Custom screensaver
 turned off"
             else

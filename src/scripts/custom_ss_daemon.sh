@@ -12,6 +12,7 @@ PIDFILE="/tmp/custom_ss_daemon.pid"
 SHIELD_PIDFILE="/tmp/custom_ss_shield.pid"
 STATEFILE="/tmp/custom_ss_restore_renderers"
 INDEXFILE="/tmp/custom_ss_last"
+MODEFILE="/tmp/custom_ss_mode"
 FIFO="/tmp/custom_ss_events.fifo"
 
 LOG="$BASE/custom_ss.log"
@@ -87,6 +88,7 @@ cleanup() {
 
     rm -f "$PIDFILE"
     rm -f "$INDEXFILE"
+    rm -f "$MODEFILE"
 
     DISPLAY=:0 xrefresh >>"$LOG" 2>&1
 
@@ -123,7 +125,22 @@ draw_screensaver() {
         LAST="-1"
     fi
 
-    NEXT=$(( (LAST + 1) % COUNT ))
+    # Shuffle steps 1..COUNT-1 places forward from LAST, so it never repeats the
+    # last image; with no previous image, any of the COUNT images may be picked.
+    # Sequential always steps exactly one place.
+    if [ "$(cat "$MODEFILE" 2>/dev/null)" = "shuffle" ]; then
+        if [ "$LAST" -eq -1 ]; then
+            CHOICES="$COUNT"
+        else
+            CHOICES=$((COUNT - 1))
+        fi
+
+        STEP=$(( 1 + $(awk -v n="$CHOICES" 'BEGIN { srand(); print int(rand() * n) }') ))
+    else
+        STEP=1
+    fi
+
+    NEXT=$(( (LAST + STEP) % COUNT ))
     ATTEMPTS=0
 
     while [ "$ATTEMPTS" -lt "$COUNT" ]; do
