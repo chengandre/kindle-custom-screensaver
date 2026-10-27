@@ -28,7 +28,7 @@ Both installation methods require:
 - a jailbroken Kindle
 - a `kindlehf`-compatible device
 
-KPM installation also requires Kindle Package Manager. Manual installation uses the `custom-screensaver-*-kindlehf.zip` release package.
+KPM installation also requires Kindle Package Manager. Manual installation uses the `custom-screensaver-*-kindlehf.zip` package from the [latest release](https://github.com/chengandre/kindle-custom-screensaver/releases/latest).
 
 ### Tested devices
 
@@ -40,7 +40,7 @@ The project has been confirmed to work on these devices and firmware versions:
 | Kindle 12th Gen            | Kindle 12          | 5.19.6                 |
 | Kindle Paperwhite 11th Gen | Paperwhite 5 / PW5 | 5.19.2                 |
 | Kindle Paperwhite 12th Gen | Paperwhite 6 / PW6 | 5.18.6, 5.19.5, 5.19.6 |
-| Kindle Colorsoft (16 GB)   | Colorsoft          | 5.19.4                 |
+| Kindle Colorsoft (16 GB)   | Colorsoft          | 5.19.4, 5.20.1         |
 
 Other `kindlehf`-compatible devices may also work but have not yet been reported.
 
@@ -48,55 +48,75 @@ Other `kindlehf`-compatible devices may also work but have not yet been reported
 
 ## KPM installation
 
-The project publishes its own KPM repository.
+The project publishes its own KPM repository. Type each command below in the Kindle search bar.
 
-In the Kindle search bar, add the repository, verify that it was added, and refresh KPM's package index:
+### 1. Add the repository
 
 ```text
 ;kpm add-repo https://kpm.andrecheng.com/kpm.json
-# or ;kpm add-repo https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json
-;kpm list-repo
-;kpm update
 ```
 
-Confirm that the repository appears in `;kpm list-repo` before continuing. On some devices, adding the repository from the Kindle search bar does nothing, likely due to KPM behavior. If it does not appear, add it from kterm as described below, use the ZIP installation method, or run the KPM commands over SSH.
+The same repository is also available at `https://github.com/chengandre/kindle-custom-screensaver/releases/latest/download/kpm-repository.json`.
 
-### If `;kpm add-repo` does nothing
+---
 
-Install kterm through KPM from the Kindle search bar:
-
-```text
-;kpm update
-;kpm install kterm
-```
-
-A **kterm** book appears in the library after a few seconds. Open it, then add the repository by running KPM directly:
-
-```sh
-/var/local/kmc/bin/kpm add-repo https://kpm.andrecheng.com/kpm.json
-exit
-```
-
-Back in the Kindle search bar, confirm that `https://kpm.andrecheng.com/kpm.json` appears in the list, then refresh the package index:
+### 2. Check that the repository was added
 
 ```text
 ;kpm list-repo
+```
+
+`https://kpm.andrecheng.com/kpm.json` should appear in the list.
+
+> [!WARNING]
+> On some devices, `;kpm add-repo` does nothing when run from the Kindle search bar, likely due to KPM behavior. \
+> If the repository is not listed, add it from kterm as shown below, use the [ZIP installation](#zip-installation), or run the KPM commands over SSH.
+
+#### Adding the repository through kterm
+
+1. Install kterm from the Kindle search bar:
+
+   ```text
+   ;kpm update
+   ;kpm install kterm
+   ```
+
+2. A **kterm** book appears in the library after a few seconds. Open it, then add the repository by running KPM directly:
+
+   ```sh
+   /var/local/kmc/bin/kpm add-repo https://kpm.andrecheng.com/kpm.json
+   exit
+   ```
+
+3. Back in the Kindle search bar, run `;kpm list-repo` again and check that `https://kpm.andrecheng.com/kpm.json` is listed.
+
+---
+
+### 3. Refresh the package index
+
+```text
 ;kpm update
 ```
 
-### Install the package
+---
 
-In the Kindle search bar:
+### 4. Install the package
 
 ```text
 ;kpm install custom-screensaver
 ```
 
-After installation, upload your PNG or JPEG screensaver images to the Kindle's `/screensavers/` folder.
-
 KPM installs the runtime in `/mnt/us/extensions/custom-screensaver/`, installs the **Custom Screensaver** Scriptlet in `/mnt/us/documents/`, and creates `/mnt/us/screensavers/` if needed.
 
-To uninstall:
+---
+
+### 5. Add custom screensavers and enable them
+
+Upload your PNG or JPEG screensaver images to the Kindle's `/screensavers/` folder, then open the **Custom Screensaver** Scriptlet from your Kindle library. See [Add custom screensavers](#5-add-custom-screensavers) and [Enable the custom screensaver](#6-enable-the-custom-screensaver) for supported images and how the Scriptlet cycles through modes.
+
+---
+
+### Uninstalling
 
 ```text
 ;kpm uninstall custom-screensaver
@@ -110,7 +130,7 @@ Uninstalling removes the runtime and package-owned Scriptlet but preserves `/mnt
 
 ### 1. Download the ZIP
 
-Download the `kindlehf` ZIP release package:
+Download the `kindlehf` ZIP package from the [latest release](https://github.com/chengandre/kindle-custom-screensaver/releases/latest):
 
 ```text
 custom-screensaver-<version>-kindlehf.zip
@@ -212,7 +232,7 @@ Example:
 ```
 
 - Supported extensions: `.png`, `.jpg`, and `.jpeg` (case-insensitive)
-- Images are rotated in filename order
+- Images are shown in random order in shuffle mode, or in filename order in sequential mode (see [step 6](#6-enable-the-custom-screensaver))
 - Images that fail to render are skipped. If all images fail, the daemon stops and attempts to restore stock screensavers.
 - Images are automatically scaled to fit the screen
 - Images are always shown in portrait, even if the Kindle was in landscape when it went to sleep
@@ -244,7 +264,7 @@ To test:
 To update:
 
 1. Disable the custom screensaver via the Scriptlet
-2. Download and extract the new ZIP on your computer
+2. Download and extract the new ZIP from the [latest release](https://github.com/chengandre/kindle-custom-screensaver/releases/latest) on your computer
 3. Connect the Kindle over USB
 4. Copy the updated `documents` and `extensions` contents to their corresponding folders on the Kindle, allowing the custom screensaver files to be replaced
 5. Safely eject the Kindle
