@@ -88,6 +88,18 @@ int main(int argc, char **argv)
     fbink_get_state(&config, &state);
 
     /*
+     * Flashing AUTO refreshes resolve to GC16, which Kaleido panels (Colorsoft)
+     * render in grayscale; their driver only uses the color waveforms when
+     * asked for them explicitly.
+     */
+    if (state.has_color_panel) {
+        config.wfm_mode = WFM_GCC16;
+
+        fprintf(stderr, "screensaver_draw: color panel at %ubpp, using GCC16\n",
+                state.bpp);
+    }
+
+    /*
      * Standard Kindles have a single landscape orientation, so one fixed
      * rotation direction keeps the image upright in portrait.
      */
