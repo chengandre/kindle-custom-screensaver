@@ -88,7 +88,8 @@ static void place_shield_below_pin(Display *display, Window root, Window shield)
         if (!XFetchName(display, children[i], &name) || name == NULL)
             continue;
 
-        int is_pin = strstr(name, "_ID:passwdlg_") != NULL;
+        /* Field order varies by firmware, so ID may be the last field. */
+        int is_pin = strstr(name, "_ID:passwdlg") != NULL;
         XFree(name);
 
         if (!is_pin || !XGetWindowAttributes(display, children[i], &attributes)
