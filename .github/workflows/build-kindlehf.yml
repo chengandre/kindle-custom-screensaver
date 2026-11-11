@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - "**"
     tags:
       - "v*"
+    paths-ignore:
+      - README.md
+      - .github/release-notes/**
+      - .gitignore
 
 permissions:
   contents: read
