@@ -34,13 +34,13 @@ KPM installation also requires Kindle Package Manager. Manual installation uses 
 
 The project has been confirmed to work on these devices and firmware versions:
 
-| Device                     | Model              | Firmware               |
-| -------------------------- | ------------------ | ---------------------- |
-| Kindle 11th Gen            | Kindle 11          | 5.19.5                 |
-| Kindle 12th Gen            | Kindle 12          | 5.19.6                 |
-| Kindle Paperwhite 11th Gen | Paperwhite 5 / PW5 | 5.19.2                 |
-| Kindle Paperwhite 12th Gen | Paperwhite 6 / PW6 | 5.18.6, 5.19.5, 5.19.6 |
-| Kindle Colorsoft (16 GB)   | Colorsoft          | 5.19.4, 5.20.1         |
+| Device                     | Model              | Firmware                       |
+| -------------------------- | ------------------ | ------------------------------ |
+| Kindle 11th Gen            | Kindle 11          | 5.19.5                         |
+| Kindle 12th Gen            | Kindle 12          | 5.19.6                         |
+| Kindle Paperwhite 11th Gen | Paperwhite 5 / PW5 | 5.19.2                         |
+| Kindle Paperwhite 12th Gen | Paperwhite 6 / PW6 | 5.18.6, 5.19.5, 5.19.6, 5.20.1 |
+| Kindle Colorsoft (16 GB)   | Colorsoft          | 5.19.4, 5.20.1                 |
 
 Other `kindlehf`-compatible devices may also work but have not yet been reported.
 
